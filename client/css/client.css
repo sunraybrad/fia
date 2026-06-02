@@ -1,0 +1,259 @@
+/*
+ * client.css
+ * FIA Client/Inspector portal — Bootstrap 5 theme overrides
+ * Color palette sourced from legacy listing.php / fia.css
+ *
+ * Variables
+ * --fia-blue:    #6699CC  (header bars, primary accent)
+ * --fia-dark:    #333333  (column headers, nav)
+ * --fia-yellow:  #FFFFCC  (legend, highlight rows)
+ * --fia-white:   #FFFFFF
+ * --fia-red:     #BA0000  (destructive actions)
+ */
+
+:root {
+    --fia-blue:   #6699CC;
+    --fia-dark:   #333333;
+    --fia-yellow: #FFFFCC;
+    --fia-red:    #BA0000;
+    --fia-blue-dark: #4d7aaa;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────── */
+
+body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
+    background-color: #f4f6f8;
+    color: #222;
+}
+
+/* ── Top navbar ───────────────────────────────────────────────────────── */
+
+.fia-navbar {
+    background-color: var(--fia-dark);
+}
+
+.fia-navbar .navbar-brand img {
+    max-height: 42px;
+}
+
+.fia-navbar .nav-link {
+    color: #ddd !important;
+    font-size: 0.85rem;
+}
+
+.fia-navbar .nav-link:hover,
+.fia-navbar .nav-link.active {
+    color: #fff !important;
+}
+
+.fia-navbar .navbar-text {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+/* ── Page header bar (replaces the blue <tr> band) ────────────────────── */
+
+.fia-page-header {
+    background-color: var(--fia-blue);
+    color: #fff;
+    padding: 0.6rem 1rem;
+    border-radius: 4px 4px 0 0;
+    font-size: 0.95rem;
+}
+
+.fia-page-header .subtext {
+    font-size: 0.78rem;
+    color: #dce8f5;
+}
+
+/* ── Section card ─────────────────────────────────────────────────────── */
+
+.fia-card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    margin-bottom: 1.25rem;
+}
+
+.fia-card .fia-page-header {
+    margin: 0;
+}
+
+.fia-card-body {
+    padding: 0.75rem 1rem;
+}
+
+/* ── Data table ───────────────────────────────────────────────────────── */
+
+.fia-table {
+    width: 100%;
+    margin: 0;
+    font-size: 0.82rem;
+    border-collapse: collapse;
+}
+
+.fia-table thead th {
+    background-color: var(--fia-dark);
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
+}
+
+.fia-table tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.fia-table tbody tr:hover {
+    background-color: #eef3f9;
+}
+
+.fia-table td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.fia-table td.text-start {
+    text-align: left;
+}
+
+/* ── Legend / highlight area ──────────────────────────────────────────── */
+
+.fia-legend {
+    background-color: var(--fia-yellow);
+    border: 1px solid #e0d880;
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.8rem;
+    line-height: 1.9;
+}
+
+/* ── Pagination ───────────────────────────────────────────────────────── */
+
+.fia-pagination {
+    font-size: 0.82rem;
+    color: #555;
+}
+
+.fia-pagination a {
+    color: var(--fia-blue-dark);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.btn-fia {
+    background-color: var(--fia-blue);
+    border-color: var(--fia-blue-dark);
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.btn-fia:hover {
+    background-color: var(--fia-blue-dark);
+    color: #fff;
+}
+
+.btn-fia-danger {
+    background-color: var(--fia-red);
+    border-color: #8a0000;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+/* ── Status icons (replacing gif images) ─────────────────────────────── */
+
+.status-badge {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.status-assigned  { background-color: #f0a500; }
+.status-complete  { background-color: #28a745; }
+
+.upload-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-decoration: none;
+}
+
+.upload-badge.has-photos {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.upload-badge.no-photos {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* ── Alert / flash messages ───────────────────────────────────────────── */
+
+.fia-flash {
+    margin: 0.5rem 0 0.75rem;
+}
+
+/* ── Search form ──────────────────────────────────────────────────────── */
+
+.fia-search-bar {
+    background-color: var(--fia-yellow);
+    border: 1px solid #e0d880;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+
+.fia-footer {
+    font-size: 0.75rem;
+    color: #999;
+    text-align: center;
+    padding: 1rem 0 1.5rem;
+    border-top: 1px solid #ddd;
+    margin-top: 2rem;
+}
+
+/* ── Responsive tweaks ────────────────────────────────────────────────── */
+
+@media (max-width: 575.98px) {
+    .fia-table thead {
+        display: none;                  /* stack rows on small screens */
+    }
+
+    .fia-table tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 0.5rem;
+        background: #fff;
+    }
+
+    .fia-table td {
+        display: flex;
+        justify-content: space-between;
+        text-align: right;
+        padding: 0.25rem 0.4rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .fia-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--fia-dark);
+        text-align: left;
+        flex: 1;
+    }
+
+    .fia-table td:last-child {
+        border-bottom: none;
+    }
+}

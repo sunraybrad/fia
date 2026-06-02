@@ -1,0 +1,270 @@
+/*
+ * inspector.css — FIA Inspector Portal
+ * Clean, mobile-first Bootstrap 5 theme.
+ */
+
+:root {
+    --fia-blue:      #6699CC;
+    --fia-blue-dark: #4d7aaa;
+    --fia-dark:      #333333;
+    --fia-yellow:    #FFFFCC;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────── */
+
+body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
+    background-color: #f0f2f5;
+    color: #222;
+}
+
+/* ── Top navbar ───────────────────────────────────────────────────────── */
+
+.insp-navbar {
+    background-color: var(--fia-dark);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.insp-navbar .navbar-brand img {
+    max-height: 38px;
+}
+
+.insp-navbar .nav-link {
+    color: #ddd !important;
+    font-size: 0.85rem;
+}
+
+.insp-navbar .nav-link:hover,
+.insp-navbar .nav-link.active {
+    color: #fff !important;
+}
+
+.insp-navbar .navbar-text {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+
+.insp-card {
+    background: #fff;
+    border: 1px solid #dde;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.insp-card-header {
+    background-color: var(--fia-blue);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.insp-card-body {
+    padding: 0.85rem 1rem;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.btn-fia {
+    background-color: var(--fia-blue);
+    border-color: var(--fia-blue-dark);
+    color: #fff;
+}
+
+.btn-fia:hover {
+    background-color: var(--fia-blue-dark);
+    color: #fff;
+}
+
+/* ── Job list table ───────────────────────────────────────────────────── */
+
+.insp-table {
+    width: 100%;
+    font-size: 0.82rem;
+    border-collapse: collapse;
+}
+
+.insp-table thead th {
+    background-color: var(--fia-dark);
+    color: #fff;
+    padding: 0.4rem 0.6rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.insp-table tbody tr {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.insp-table tbody tr:hover {
+    background-color: #eef3fb;
+}
+
+.insp-table td {
+    padding: 0.45rem 0.6rem;
+    vertical-align: middle;
+}
+
+/* ── Message card ─────────────────────────────────────────────────────── */
+
+.msg-card {
+    border-left: 4px solid var(--fia-blue);
+    background: var(--fia-yellow);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+}
+
+.msg-card .msg-subject {
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.msg-card .msg-date {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* ── Photo grid ───────────────────────────────────────────────────────── */
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+@media (min-width: 480px)  { .photo-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px)  { .photo-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1024px) { .photo-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 1400px) { .photo-grid { grid-template-columns: repeat(6, 1fr); } }
+
+.photo-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    display: flex;
+    flex-direction: column;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.photo-item .photo-caption {
+    padding: 0.35rem 0.5rem;
+    flex: 1;
+}
+
+.photo-item .photo-caption input {
+    font-size: 0.78rem;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    width: 100%;
+    background: transparent;
+    outline: none;
+    padding: 0.1rem 0;
+}
+
+.photo-item .photo-caption input:focus {
+    border-bottom-color: var(--fia-blue);
+}
+
+.photo-item .photo-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.25rem 0.5rem 0.4rem;
+    gap: 0.3rem;
+}
+
+/* ── Drop zone ────────────────────────────────────────────────────────── */
+
+.upload-zone {
+    border: 2px dashed var(--fia-blue);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8faff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+    background: #e8f0fb;
+}
+
+.upload-zone i {
+    font-size: 2rem;
+    color: var(--fia-blue);
+}
+
+/* ── Login page ───────────────────────────────────────────────────────── */
+
+.login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e4e8ef;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 380px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 2rem 2.25rem 1.75rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+
+.login-box .logo {
+    display: block;
+    max-width: 200px;
+    margin: 0 auto 1.5rem;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+
+.insp-footer {
+    font-size: 0.75rem;
+    color: #aaa;
+    text-align: center;
+    padding: 1rem 0 1.5rem;
+    margin-top: 2rem;
+}
+
+/* ── Responsive tweaks ────────────────────────────────────────────────── */
+
+@media (max-width: 575px) {
+    .insp-table thead { display: none; }
+    .insp-table td {
+        display: block;
+        padding: 0.25rem 0.6rem;
+    }
+    .insp-table td::before {
+        content: attr(data-label) ': ';
+        font-weight: 600;
+        font-size: .75rem;
+        color: #666;
+    }
+    .insp-table tr {
+        display: block;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        padding: 0.25rem 0;
+    }
+}

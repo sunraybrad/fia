@@ -1,0 +1,7 @@
+User-agent: Googlebot
+Disallow: /vPix/
+Disallow: sysmonitor.php
+
+User-agent: Googlebot-Image
+Disallow: /vPix/
+Disallow: sysmonitor.php

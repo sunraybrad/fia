@@ -1,0 +1,53 @@
+/* CSS Document */
+
+.container {
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1800px;
+}
+.container-fluid {
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 1800px;
+}
+.col-5-gutter{
+	padding-left: 15px;
+    padding-right: 15px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	margin-top: 6px;
+	margin-bottom: 6px;
+    margin-left: -15px;
+    margin-right: -15px;
+}
+.alert-info {
+	border-radius: 20px;
+	background-color:#00F;
+}
+a.black1 {
+	/* color: #337ab7; */
+	color: #000;
+	text-decoration: none;
+}
+a.black1:hover,
+a.black1:focus {
+	/* color: #23527c; */
+	color: #bed62f;
+	text-decoration: none;
+}
+a.black1:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+a.white1 {
+	/* color: #337ab7; */
+	color: #FFF;
+	text-decoration: none;
+}
+a.white1:hover,
+a.white1:focus {
+	/* color: #23527c; */
+	color: #C00;
+	text-decoration: none;
+}

@@ -1,0 +1,363 @@
+@charset "utf-8";
+.body2 {
+	font-size: 18px;
+	line-height: 26px;
+	font-weight: 400;
+}
+.fieldLabel9/* CSS Document */
+ {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	background-position: center;
+	color: #3366FF;
+}
+.fieldValue12 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+.ColumnHead12 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+}
+.footnote {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 8px;
+	background-position: center;
+	color: #666666;
+}
+.fieldLabel10-Bold {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	background-position: center;
+	color: #000000;
+	font-weight: bold;
+}
+.text9-Normal {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	background-position: center;
+	color: #000000;
+}
+.text12-WhiteBold {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.text18-WhiteBold {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.fieldValue10 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+}
+.buttonGreen {
+	background-color: #33FF00;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+}
+.buttonUpload {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	background-color: #E1E1E1;
+	text-align: center;
+	height: 18px;
+	width: 104px;
+	border: 1px solid #ADADAD;
+	padding-top: 2px;
+}
+
+.buttonRed {
+	background-color: #FF0000;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.footnote8 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	background-position: center;
+	color: #999999;
+}
+.textRed12-Bold {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+	color: #FF0000;
+	padding-left:4px;
+}
+.text18-BlackBold {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	color: #000000;
+}
+.buttonEditCaptions {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	background-color: #E1E1E1;
+	text-align: center;
+	height: 18px;
+	width: 132px;
+	border: 1px solid #ADADAD;
+	padding-top: 3px;
+}
+.button-red {
+  width: 142px;
+  background: #ba0000;
+  font-size: 14px;
+  padding: 0;
+  color: #fff !important;
+  -webkit-transition: all 0.2s ease-in;
+  transition: all 0.2s ease-in;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  text-align: center;
+  padding: 5px 5px;
+  float:right;
+}
+.button-red a:hover {
+	color: #fed000;
+}
+.button-red a {
+	color: #fff;
+}
+.button-green {
+  width: 142px;
+  background: #096;
+  font-size: 14px;
+  padding: 0;
+  color: #FFF !important;
+  -webkit-transition: all 0.2s ease-in;
+  transition: all 0.2s ease-in;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  border-radius: 5px;
+  text-align: center;
+  padding: 5px 5px;
+  position:fixed;
+  z-index:10;
+}
+.button-green a:hover {
+	color: #fed000;
+}
+.button-green a {
+	color: #fff;
+}
+.button-login {
+  width: 142px;
+  background: #6c89b6;
+  font-size: 14px;
+  padding: 0;
+  color: #fff !important;
+  -webkit-transition: all 0.2s ease-in;
+  transition: all 0.2s ease-in;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  text-align: center;
+  padding: 5px 5px;
+  float:right;
+}
+.navHead {
+	color: #fff;
+	font-size: 18px;
+    font-weight: 400;
+}
+.navHead2 {
+	color: #fff;
+	font-size: 14px;
+    font-weight: 400;
+	line-height:1.5;
+}
+.h1 {
+	font-size: 42px;
+    line-height: 46px;
+    font-weight: 600;
+    color: #1d3a6d;
+    margin-bottom: 8px;
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 0;
+}
+.h2 {
+	font-size: 36px;
+    line-height: 40px;
+    color: #ba0000;
+    margin-top: 20px;
+}
+.h2.about-CTA {
+	color: #fff;
+    font-size: 30px;
+    line-height: 36px;
+    margin-bottom: 0px;
+    text-align: center;
+    text-transform: uppercase;
+    background-color: #ba0000;
+    font-weight: 600;
+    padding: 40px 20px 40px 20px;
+}
+.h3 {
+	font-size: 24px;
+    line-height: 28px;
+    font-weight: 600;
+    color: #1d3a6d;
+    text-align: center;
+    margin: 0 !important;
+}
+.footer-contact {
+	color: #fff;
+    line-height: 1.75;
+    font-weight: 500;
+}
+.footer-contact a {
+	color: #fed000;
+}
+.footer-contact a:hover {
+	color: #fff;
+}
+.topper {
+	background-color: #00C;
+	padding:16px
+}
+.topper a {
+	color: #fed000;
+}
+.topper a:hover {
+	color: #fff;
+}
+td {
+	padding:0px;
+}
+li {
+	margin-bottom: 8px;
+}
+.legend {
+	font-size:10px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	line-height:1.8;
+}
+.fieldLabel {
+	font-weight: bold;
+	font-size: 12px;
+	width: 100%;
+}
+.fieldLabelBlock {
+	margin-bottom: 6px;
+	display: flex;
+	flex-direction: column;
+	align-items: center; /* Center items horizontally */
+	font-size: smaller;
+	width: 100%;
+}
+.fieldData {
+	font-weight: normal;
+	border: 1px solid #ccc;
+	font-size: small;
+	padding: 2px 2px;
+	width: 100%; /* Adjust this width as necessary */
+	box-sizing: border-box; /* Ensure padding and border are included in the width */
+	background-color: white;
+}
+.listing_header {
+	font-weight: normal;
+	border: 1px solid #ccc;
+	font-size: small;
+	padding: 4px 4px;
+	width: 100%; /* Adjust this width as necessary */
+	box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+.fieldDataEditable {
+	font-weight: normal;
+	font-size: small;
+	padding: 0px;
+	width: 100%; /* Adjust this width as necessary */
+	box-sizing: border-box;
+	text-align: center;
+}
+.custom-input {
+	width: 100%; /* Full width */
+	padding: 2px; /* Adjust padding as needed */
+	font-size: small; /* Match the font size */
+	box-sizing: border-box; /* Include padding and border in width */
+	text-align: center; /* Center text within the input */
+	border: 1px solid #ccc; /* Custom border */
+	border-radius: 2px; /* Optional: add a bit of rounding to match Bootstrap */
+}
+.leftAlign {
+	text-align: left;
+}
+.centerAlign {
+	text-align: center;
+}
+.rightAlign {
+	text-align: right;
+}
+.fieldValue {
+	font-size: 1rem;
+}
+.responsive-nav {
+	max-height: 34px;
+	width: auto;
+	margin-right: 4px;
+	margin-bottom: 4px;
+}
+.alert-text {
+	font-size: 12px;
+	color: #FFF;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	margin-bottom: 12px;
+	text-align: center;
+	padding: 4px 10px;
+	background-color: #FF0000;
+	white-space: normal; /* Ensure text wraps */
+}
+a:link {
+	color: #000000;
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+	color: #000000;
+}
+.white-visited a.visited {
+    color: white;
+}
+a:hover {
+	text-decoration: none;
+	color: #000000;
+}
+a:active {
+	text-decoration: none;
+	color: #000000;
+}
+.icon-fa {
+	color: black;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: small;
+	margin-right: 4px;
+	margin-bottom: 8px;
+	border: 2px solid blue;
+	border-radius: 6px;
+	padding: 4px;
+	display: inline-block; /* Ensure the span elements are treated as block-level elements for padding and border */
+}
+.icon-inactive {
+	color: DarkGray;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: small;
+	margin-right: 4px;
+	margin-bottom: 8px;
+	border: 1px solid DarkGray;
+	border-radius: 6px;
+	padding: 4px;
+	display: inline-block; /* Ensure the span elements are treated as block-level elements for padding and border */
+}
