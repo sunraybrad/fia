@@ -124,6 +124,35 @@ switch ($tab) {
         exit;
 
     // ── Status-only change (from header buttons) ──────────────────────────
+    case 'cancel':
+        $old = $db->prepare("SELECT status, notes FROM inspections WHERE fia_number = ? LIMIT 1");
+        $old->bind_param('i', $fia);
+        $old->execute();
+        $old_row    = $old->get_result()->fetch_assoc();
+        $old_status = $old_row['status'] ?? '';
+        $old->close();
+
+        $reason      = trim($_POST['cancel_reason'] ?? '');
+        $reason_text = $reason !== '' ? $reason : 'No reason given';
+        $prefix      = '[Cancelled ' . date('Y-m-d') . ': ' . $reason_text . ']';
+        $new_notes   = $prefix . ($old_row['notes'] ? "\n" . $old_row['notes'] : '');
+
+        $stmt = $db->prepare(
+            "UPDATE inspections SET status = 'Cancelled', is_archived = TRUE, notes = ? WHERE fia_number = ?"
+        );
+        $stmt->bind_param('si', $new_notes, $fia);
+        $ok = $stmt->execute();
+        $stmt->close();
+        if ($ok) {
+            log_audit('inspection.cancel', 'inspection', $fia, [
+                'status' => ['old' => $old_status, 'new' => 'Cancelled'],
+            ]);
+            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Inspection #' . $fia . ' has been cancelled.'];
+            header('Location: /office/index.php');
+            exit;
+        }
+        redirect_back($fia, 'dispatch', false);
+
     case 'status_change':
         $allowed = ['Assigned', 'Billed', 'Invoiced'];
         $new_status = $_POST['new_status'] ?? '';

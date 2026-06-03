@@ -266,6 +266,12 @@ require_once __DIR__ . '/includes/header.php';
                 </button>
             </form>
             <?php endif; ?>
+            <?php if (!in_array($ins['status'], ['Invoiced', 'Cancelled'], true)): ?>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal" data-bs-target="#cancelModal">
+                <i class="bi bi-x-circle"></i> Cancel
+            </button>
+            <?php endif; ?>
             <a href="/office/index.php" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
@@ -1268,6 +1274,39 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 
 </div>
+</div>
+
+<!-- ── Cancel inspection modal ───────────────────────────────────────── -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="/office/save_inspection.php">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <input type="hidden" name="fia" value="<?= $fia ?>">
+            <input type="hidden" name="tab" value="cancel">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="cancelModalLabel">
+                        <i class="bi bi-x-circle"></i> Cancel Inspection #<?= $fia ?>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        This will set the status to <strong>Cancelled</strong> and archive the record.
+                    </p>
+                    <label for="cancel_reason" class="form-label fw-semibold">Reason for cancellation</label>
+                    <textarea name="cancel_reason" id="cancel_reason" class="form-control" rows="3"
+                              placeholder="e.g. Client withdrew request, duplicate entry…"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Never mind</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Confirm Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- ── Media lightbox modal ───────────────────────────────────────────── -->

@@ -197,7 +197,10 @@ require_once __DIR__ . '/includes/header.php';
         </a>
     </li>
     <?php endforeach; ?>
-    <li class="nav-item ms-auto align-self-center">
+    <li class="nav-item ms-auto align-self-center d-flex gap-2 align-items-center">
+        <a href="/office/intake_geico.php" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-envelope-open"></i> Geico Intake
+        </a>
         <small class="text-muted">
             <a href="/office/index.php?tab=<?= urlencode($active_tab) ?>"
                class="text-muted text-decoration-none">
