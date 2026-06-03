@@ -536,14 +536,22 @@ require_once __DIR__ . '/includes/header.php';
 
 <script>
 (function () {
+    // ── Existing filenames (for duplicate detection) ───────────────────────
+    const uploadedNames = new Set(
+        <?= json_encode(array_map(fn($p) => strtolower(basename($p['image_path'])), $photos)) ?>
+    );
+
     // ── Upload zone ───────────────────────────────────────────────────────
 
-    const dropZone   = document.getElementById('drop-zone');
-    const fileInput  = document.getElementById('file-input');
-    const browseBtn  = document.getElementById('browse-btn');
-    const preview    = document.getElementById('upload-preview');
-    const uploadBtn  = document.getElementById('upload-btn');
+    const dropZone    = document.getElementById('drop-zone');
+    const fileInput   = document.getElementById('file-input');
+    const browseBtn   = document.getElementById('browse-btn');
+    const preview     = document.getElementById('upload-preview');
+    const uploadBtn   = document.getElementById('upload-btn');
     const uploadCount = document.getElementById('upload-count');
+
+    // Use DataTransfer to manage the queue so items can be removed individually
+    let dt = new DataTransfer();
 
     browseBtn.addEventListener('click', () => fileInput.click());
 
@@ -552,25 +560,49 @@ require_once __DIR__ . '/includes/header.php';
     dropZone.addEventListener('drop', e => {
         e.preventDefault();
         dropZone.classList.remove('drag-over');
-        fileInput.files = e.dataTransfer.files;
-        showPreviews(fileInput.files);
+        addFiles(e.dataTransfer.files);
     });
     dropZone.addEventListener('click', e => {
         if (e.target !== browseBtn && !browseBtn.contains(e.target)) fileInput.click();
     });
 
-    fileInput.addEventListener('change', () => showPreviews(fileInput.files));
+    fileInput.addEventListener('change', () => {
+        addFiles(fileInput.files);
+        // Reset so the same file can be re-selected after removal
+        fileInput.value = '';
+    });
 
-    function showPreviews(files) {
+    function addFiles(incoming) {
+        Array.from(incoming).forEach(f => dt.items.add(f));
+        fileInput.files = dt.files;
+        renderPreviews();
+    }
+
+    function removeFile(index) {
+        const fresh = new DataTransfer();
+        Array.from(dt.files).forEach((f, i) => { if (i !== index) fresh.items.add(f); });
+        dt = fresh;
+        fileInput.files = dt.files;
+        renderPreviews();
+    }
+
+    function renderPreviews() {
         preview.innerHTML = '';
+        const files = dt.files;
         if (!files.length) {
             preview.style.display = 'none';
             uploadBtn.style.display = 'none';
             return;
         }
-        Array.from(files).forEach(file => {
+
+        Array.from(files).forEach((file, idx) => {
+            const isDuplicate = uploadedNames.has(file.name.toLowerCase());
+
             const div = document.createElement('div');
             div.className = 'photo-item';
+            div.style.position = 'relative';
+
+            // Thumbnail
             const isVideo = file.type.startsWith('video/');
             let media;
             if (isVideo) {
@@ -582,23 +614,45 @@ require_once __DIR__ . '/includes/header.php';
             } else {
                 media = document.createElement('img');
                 media.src = URL.createObjectURL(file);
+                media.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;';
             }
             div.appendChild(media);
+
+            // Filename label + duplicate warning
             const cap = document.createElement('div');
             cap.className = 'photo-caption';
-            cap.style.padding = '0.3rem 0.5rem';
-            cap.style.fontSize = '.75rem';
-            cap.style.color = '#666';
+            cap.style.cssText = 'padding:0.3rem 0.5rem;font-size:.75rem;color:#666;word-break:break-all;';
             cap.textContent = file.name;
+            if (isDuplicate) {
+                const warn = document.createElement('span');
+                warn.className = 'badge bg-danger ms-1';
+                warn.title = 'A photo with this filename is already uploaded';
+                warn.textContent = 'Already uploaded';
+                cap.appendChild(warn);
+            }
             div.appendChild(cap);
+
+            // Remove button
+            const actions = document.createElement('div');
+            actions.className = 'photo-actions';
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-outline-danger btn-sm py-0 px-1';
+            removeBtn.title = 'Remove from queue';
+            removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+            removeBtn.addEventListener('click', () => removeFile(idx));
+            actions.appendChild(removeBtn);
+            div.appendChild(actions);
+
             preview.appendChild(div);
         });
+
         preview.style.display = 'grid';
         uploadBtn.style.display = '';
         uploadCount.textContent = files.length;
     }
 
-    // ── Delete photo ──────────────────────────────────────────────────────
+    // ── Delete uploaded photo ─────────────────────────────────────────────
 
     document.querySelectorAll('.btn-delete-photo').forEach(btn => {
         btn.addEventListener('click', function () {

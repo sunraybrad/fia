@@ -501,12 +501,12 @@ require_once __DIR__ . '/includes/header.php';
                 <table class="fia-table" id="inspector-list">
                     <thead>
                         <tr>
+                            <th></th>                            
                             <th>Mi</th>
                             <th class="text-start">Name</th>
                             <th>Cell</th>
                             <th>Rating</th>
                             <th>City / State</th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -522,19 +522,19 @@ require_once __DIR__ . '/includes/header.php';
                         data-comments="<?= h($ni['comments'] ?? '') ?>"
                         data-restrictions="<?= h($ni['restrictions'] ?? '') ?>"
                         style="cursor:pointer;">
-                        <td data-label="Mi"><?= $ni['distance_miles'] ?></td>
-                        <td data-label="Name" class="text-start fw-semibold"><?= h($ni['full_name']) ?></td>
-                        <td data-label="Cell" style="white-space:nowrap;"><?= h($ni['phone_cell'] ?? $ni['phone_primary'] ?? '—') ?></td>
-                        <td data-label="Rating"><?= $ni['rating'] ? number_format((float)$ni['rating'], 1) : '—' ?></td>
-                        <td data-label="Location"><?= h(implode(', ', array_filter([$ni['city'] ?? '', $ni['state_code'] ?? '']))) ?></td>
                         <td>
                             <button type="button" class="btn btn-fia btn-sm assign-btn py-0 px-2"
                                     data-id="<?= (int)$ni['inspector_id'] ?>"
                                     data-name="<?= h($ni['full_name']) ?>"
                                     title="Assign this inspector">
-                                <i class="bi bi-person-check"></i> Select
+                                <i class="bi bi-person-check"></i> Assign
                             </button>
-                        </td>
+                        </td>                        
+                        <td data-label="Mi"><?= $ni['distance_miles'] ?></td>
+                        <td data-label="Name" class="text-start fw-semibold"><?= h($ni['full_name']) ?></td>
+                        <td data-label="Cell" style="white-space:nowrap;"><?= h($ni['phone_cell'] ?? $ni['phone_primary'] ?? '—') ?></td>
+                        <td data-label="Rating"><?= $ni['rating'] ? number_format((float)$ni['rating'], 1) : '—' ?></td>
+                        <td data-label="Location"><?= h(implode(', ', array_filter([$ni['city'] ?? '', $ni['state_code'] ?? '']))) ?></td>
                     </tr>
                     <?php endforeach; ?>
                     </tbody>

@@ -99,7 +99,7 @@ require_once __DIR__ . '/includes/header.php';
                     <h5 class="mb-0 fw-bold">Welcome, <?= h($_SESSION['inspector_name']) ?></h5>
                     <small class="text-muted"><?= date('l, F j, Y') ?></small>
                 </div>
-                <a href="/inspector/jobs.php" class="btn btn-fia btn-sm">
+                <a href="/inspector/jobs.php?status=" class="btn btn-fia btn-sm">
                     <i class="bi bi-clipboard-check"></i> View All Jobs
                 </a>
             </div>
@@ -108,26 +108,28 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Job counts -->
     <div class="col-6 col-md-3">
+        <a href="/inspector/jobs.php?status=Assigned" class="text-decoration-none">
         <div class="insp-card text-center">
             <div class="insp-card-body py-3">
                 <div style="font-size:2rem; font-weight:700; color:var(--fia-blue);">
                     <?= $counts['Assigned'] ?>
                 </div>
                 <div class="text-muted" style="font-size:.82rem;">Assigned</div>
-                <a href="/inspector/jobs.php?status=Assigned" class="stretched-link"></a>
             </div>
         </div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
+        <a href="/inspector/jobs.php?status=Complete" class="text-decoration-none">
         <div class="insp-card text-center">
             <div class="insp-card-body py-3">
                 <div style="font-size:2rem; font-weight:700; color:#f0ad4e;">
                     <?= $counts['Complete'] ?>
                 </div>
                 <div class="text-muted" style="font-size:.82rem;">Complete (pending billing)</div>
-                <a href="/inspector/jobs.php?status=Complete" class="stretched-link"></a>
             </div>
         </div>
+        </a>
     </div>
 
     <!-- Recent jobs -->
