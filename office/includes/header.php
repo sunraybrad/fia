@@ -32,11 +32,11 @@ if ($flash !== null && !in_array($flash['type'] ?? '', ['success', 'danger', 'wa
 </head>
 <body>
 
-<nav class="navbar navbar-expand-md fia-navbar mb-3" aria-label="Office navigation">
+<nav class="navbar navbar-expand-md fia-navbar office-navbar mb-3" aria-label="Office navigation">
     <div class="container-fluid">
 
         <a class="navbar-brand" href="/office/">
-            <img src="/images/logo_horiz_600.jpg" alt="Florida Inspection Associates">
+            <img src="/images/logo/logo_horiz_600_admin.png" alt="Florida Inspection Associates">
         </a>
 
         <button class="navbar-toggler" type="button"
@@ -65,6 +65,12 @@ if ($flash !== null && !in_array($flash['type'] ?? '', ['success', 'danger', 'wa
                     <a class="nav-link <?= $active_nav === 'clients' ? 'active' : '' ?>"
                        href="/office/warranty_cos.php">
                         <i class="bi bi-building"></i> Warranty Cos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $active_nav === 'messages' ? 'active' : '' ?>"
+                       href="/office/messages.php">
+                        <i class="bi bi-megaphone"></i> Messages
                     </a>
                 </li>
 

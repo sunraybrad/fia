@@ -19,6 +19,7 @@
     --fia-dark:      #333333;
     --fia-yellow:    #FFFFCC;
     --fia-red:       #BA0000;
+    --fia-form-bg:   #eef1f6;   /* editable form section background */
     --sidebar-width: 220px;
 }
 
@@ -34,20 +35,36 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   NAVBAR  (.fia-navbar — office/client  |  .insp-navbar — inspector)
+   FORMS  — tighten label→field gap so labels read as captions above inputs,
+   not floating between fields. Row gap provides the space between groups.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.form-label {
+    margin-bottom: 0.1rem;
+    font-size: 0.82rem;
+    color: #0473c5;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAVBAR  (.fia-navbar — shared base  |  portal modifier classes for color)
    ══════════════════════════════════════════════════════════════════════════ */
 
 .fia-navbar,
 .insp-navbar {
-    background-color: var(--fia-dark);
     position: sticky;
     top: 0;
     z-index: 1030;
 }
 
+/* Per-portal navbar background colours */
+.office-navbar  { background-color: #1d007d; }
+.client-navbar  { background-color: #c85500; }
+.insp-navbar    { background-color: #1a6b1a; }
+
 .fia-navbar .navbar-brand img,
 .insp-navbar .navbar-brand img {
     max-height: 42px;
+    border-radius: 6px;
 }
 
 .fia-navbar .nav-link,
@@ -199,7 +216,7 @@ body {
 
 /* client portal centers table cells by default */
 .fia-table td              { text-align: left; }
-.fia-table td.text-start   { text-align: left; }
+.fia-table td.text-start   { text-align: left; font-size: medium; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    PHOTO GRID  (shared — inspector and office both use this)
@@ -309,6 +326,30 @@ body {
     border: 1px solid #e0d880;
     border-radius: 4px;
     padding: 0.6rem 1rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FORM SECTION  (all portals — editable forms)
+   Light background so white form fields visually pop.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.fia-form-section {
+    background-color: var(--fia-form-bg);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+}
+
+/* Keep individual fields white so they stand out against the section bg */
+.fia-form-section .form-control,
+.fia-form-section .form-select {
+    background-color: #fff;
+}
+
+/* Disabled / read-only fields stay visually muted */
+.fia-form-section .form-control:disabled,
+.fia-form-section .form-control[readonly],
+.fia-form-section .form-select:disabled {
+    background-color: #e9ecef;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

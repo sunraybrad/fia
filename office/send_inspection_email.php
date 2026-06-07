@@ -6,6 +6,7 @@
 require_once 'C:\inetpub\fia_private\config.php';
 require_once 'C:\inetpub\fia_private\db.php';
 require_once __DIR__ . '/../includes/mailer.php';
+require_once __DIR__ . '/../includes/worksheet_pdf.php';
 require_once __DIR__ . '/includes/auth.php';
 init_session();
 require_office();
@@ -26,6 +27,7 @@ if (!$fia) {
 }
 
 $recipient_type = $_POST['recipient_type'] ?? 'inspector';  // 'inspector' or 'warco'
+$template       = $_POST['template']       ?? '';
 $cc             = trim($_POST['cc']      ?? '');
 $subject        = trim($_POST['subject'] ?? '');
 $body           = trim($_POST['body']    ?? '');
@@ -56,6 +58,31 @@ if (!$row) {
 $inspector_id   = $recipient_type === 'inspector' ? ((int)($row['inspector_id']   ?? 0) ?: null) : null;
 $warranty_co_id = $recipient_type === 'warco'     ? ((int)($row['warranty_co_id'] ?? 0) ?: null) : null;
 
+// Attach worksheet PDF for assignment emails
+$attachments = [];
+if ($template === 'assignment') {
+    $pdf_bytes = worksheet_pdf_bytes($fia, $db);
+    if ($pdf_bytes !== false) {
+        $attachments[] = [
+            'name'  => 'FIA_Worksheet_' . $fia . '.pdf',
+            'bytes' => $pdf_bytes,
+        ];
+    }
+}
+
+// Manual file attachments — read bytes now; store to disk after we have email_id
+$manual_files = [];
+if (!empty($_FILES['manual_attachments']['tmp_name'])) {
+    foreach ($_FILES['manual_attachments']['tmp_name'] as $i => $tmp) {
+        if ($_FILES['manual_attachments']['error'][$i] !== UPLOAD_ERR_OK) continue;
+        $bytes = file_get_contents($tmp);
+        if ($bytes === false) continue;
+        $name = basename($_FILES['manual_attachments']['name'][$i]);
+        $manual_files[] = ['name' => $name, 'bytes' => $bytes];
+        $attachments[]  = ['name' => $name, 'bytes' => $bytes];
+    }
+}
+
 $result = fia_send_email($db, [
     'to'             => $to,
     'cc'             => $cc,
@@ -66,12 +93,58 @@ $result = fia_send_email($db, [
     'fia_number'     => $fia,
     'inspector_id'   => $inspector_id,
     'warranty_co_id' => $warranty_co_id,
+    'attachments'    => $attachments,
 ]);
+
+// Log attachment records once we have the email_id
+if ($result['email_id']) {
+    $email_id = $result['email_id'];
+
+    $att_stmt = $db->prepare(
+        "INSERT INTO email_attachments (email_id, filename, file_ext, mime_type, legacy_path)
+         VALUES (?, ?, ?, ?, ?)"
+    );
+
+    // Auto-generated worksheet — log metadata only, no stored file
+    if ($template === 'assignment') {
+        $fn   = 'FIA_Worksheet_' . $fia . '.pdf';
+        $ext  = 'pdf';
+        $mime = 'application/pdf';
+        $path = null;
+        $att_stmt->bind_param('issss', $email_id, $fn, $ext, $mime, $path);
+        $att_stmt->execute();
+    }
+
+    // Manual files — store to disk and log path
+    foreach ($manual_files as $file) {
+        $dir = ATTACH_PATH . '/' . $email_id;
+        if (!is_dir($dir)) {
+            $mkdir_ok = mkdir($dir, 0755, true);
+            if (!$mkdir_ok) {
+                error_log('send_inspection_email: mkdir failed for ' . $dir . ' — check IIS permissions on ' . ATTACH_PATH);
+                continue;
+            }
+        }
+        $safe_name = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $file['name']);
+        $dest      = $dir . '/' . $safe_name;
+        $write_ok  = file_put_contents($dest, $file['bytes']);
+        if ($write_ok === false) {
+            error_log('send_inspection_email: file_put_contents failed for ' . $dest);
+            continue;
+        }
+        $ext  = strtolower(pathinfo($safe_name, PATHINFO_EXTENSION));
+        $mime = mime_content_type($dest) ?: 'application/octet-stream';
+        $rel  = 'attachments/' . $email_id . '/' . $safe_name;
+        $att_stmt->bind_param('issss', $email_id, $safe_name, $ext, $mime, $rel);
+        $att_stmt->execute();
+    }
+
+    $att_stmt->close();
+}
 
 if ($result['ok']) {
     header("Location: /office/inspection.php?fia={$fia}&tab=emails&saved=1");
 } else {
-    // Log the error but still redirect — the failed send was logged to DB
     header("Location: /office/inspection.php?fia={$fia}&tab=emails&err=sendfail");
 }
 exit;

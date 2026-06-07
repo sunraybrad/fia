@@ -285,7 +285,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token"     value="<?= csrf_token() ?>">
 <input type="hidden" name="warranty_co_id" value="<?= $is_new ? '' : $wc_id ?>">
 <input type="hidden" name="tab"            value="details">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
 
         <!-- Company -->
@@ -407,7 +407,7 @@ require_once __DIR__ . '/includes/header.php';
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="tab-pane fade <?= $active_tab === 'contacts' ? 'show active' : '' ?>" id="tab-contacts" role="tabpanel">
 <?php if (!$is_new): ?>
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <strong style="font-size:.85rem;">Contact List</strong>
         <button type="button" class="btn btn-fia btn-sm" id="btn-add-contact">
@@ -480,7 +480,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token"     value="<?= csrf_token() ?>">
 <input type="hidden" name="warranty_co_id" value="<?= $is_new ? '' : $wc_id ?>">
 <input type="hidden" name="tab"            value="rates">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
 
         <div class="col-md-4">

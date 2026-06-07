@@ -263,7 +263,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token"    value="<?= csrf_token() ?>">
 <input type="hidden" name="inspector_id"  value="<?= $is_new ? '' : (int)$inspector_id ?>">
 <input type="hidden" name="tab"           value="detail">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
 
     <div class="row g-3">
 

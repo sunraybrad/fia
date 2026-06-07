@@ -14,6 +14,9 @@
  *       'inspector_id'   => 1184,                 // optional
  *       'warranty_co_id' => 1000,                 // optional
  *       'cc'             => 'cc@example.com',     // optional
+ *       'attachments'   => [                       // optional
+ *           ['name' => 'Worksheet_345931.pdf', 'bytes' => $raw_pdf_bytes],
+ *       ],
  *   ]);
  *   // Returns ['ok' => bool, 'error' => string|null, 'email_id' => int|null]
  *
@@ -41,6 +44,7 @@ function fia_send_email(mysqli $db, array $params): array {
     $body           = trim($params['body']           ?? '');
     $body_html      = trim($params['body_html']      ?? '');
     $cc             = trim($params['cc']             ?? '');
+    $attachments    = $params['attachments']         ?? [];
     $sent_by_email  = trim($params['sent_by_email']  ?? '');
     $sent_by_name   = trim($params['sent_by_name']   ?? '');
     $fia_number     = isset($params['fia_number'])     ? (int)$params['fia_number']     : null;
@@ -83,6 +87,12 @@ function fia_send_email(mysqli $db, array $params): array {
             $mail->addBCC(MAIL_BCC_ADMIN);
         }
 
+        foreach ($attachments as $att) {
+            if (!empty($att['bytes']) && !empty($att['name'])) {
+                $mail->addStringAttachment($att['bytes'], $att['name'], 'base64', 'application/pdf');
+            }
+        }
+
         $mail->Subject = $subject;
         $mail->Body    = $body;
 
@@ -110,7 +120,7 @@ function fia_send_email(mysqli $db, array $params): array {
     );
     $from = SMTP_FROM_EMAIL;
     $stmt->bind_param(
-        'iiisssssss',
+        'iiissssss',
         $fia_number, $inspector_id, $warranty_co_id,
         $from, $to, $cc, $subject, $body, $status
     );

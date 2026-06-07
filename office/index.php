@@ -18,7 +18,7 @@ $db = get_db();
 // ── Filter / search state ─────────────────────────────────────────────────
 
 // Valid status tabs
-$valid_tabs = ['Unassigned', 'Complete', 'Billed'];
+$valid_tabs = ['Unassigned', 'Assigned', 'Complete', 'Billed'];
 
 // Tab selection: POST or GET change → store in session; otherwise use session
 if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
@@ -46,10 +46,10 @@ $offset      = ($current_page - 1) * $per_page;
 $count_sql = "SELECT status, COUNT(*) AS cnt
               FROM inspections
               WHERE is_archived = FALSE
-                AND status IN ('Unassigned','Complete','Billed')
+                AND status IN ('Unassigned','Assigned','Complete','Billed')
               GROUP BY status";
 $counts_raw = $db->query($count_sql);
-$counts = ['Unassigned' => 0, 'Complete' => 0, 'Billed' => 0];
+$counts = ['Unassigned' => 0, 'Assigned' => 0, 'Complete' => 0, 'Billed' => 0];
 while ($row = $counts_raw->fetch_assoc()) {
     $counts[$row['status']] = (int)$row['cnt'];
 }
@@ -330,7 +330,7 @@ require_once __DIR__ . '/includes/header.php';
             <tbody>
             <?php foreach ($rows as $row): ?>
                 <tr>
-                    <td data-label="FIA #">
+                    <td data-label="FIA #" class="text-start">
                         <a href="/office/inspection.php?fia=<?= (int)$row['fia_number'] ?>">
                             <?= (int)$row['fia_number'] ?>
                         </a>
@@ -350,7 +350,7 @@ require_once __DIR__ . '/includes/header.php';
                     <td data-label="Contract #">
                         <?= h($row['contract_number'] ?? '—') ?>
                     </td>
-                    <td data-label="Vehicle" class="text-start">
+                    <td data-label="Vehicle">
                         <?= h(trim(($row['year'] ?? '') . ' ' . ($row['make'] ?? '') . ' ' . ($row['model'] ?? '')) ?: '—') ?>
                     </td>
                     <td data-label="Location">

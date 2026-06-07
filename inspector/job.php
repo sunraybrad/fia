@@ -118,9 +118,16 @@ require_once __DIR__ . '/includes/header.php';
 <div class="insp-card mb-3">
     <div class="insp-card-header d-flex justify-content-between align-items-center">
         <span>FIA #<?= $fia ?> — <?= h($ins['inspection_type'] ?? 'Inspection') ?></span>
-        <a href="/inspector/jobs.php" class="btn btn-sm btn-outline-light py-0">
-            <i class="bi bi-arrow-left"></i> Jobs
-        </a>
+        <div class="d-flex gap-1">
+            <a href="/inspector/generate_worksheet.php?fia=<?= $fia ?>"
+               target="_blank"
+               class="btn btn-sm btn-outline-light py-0" title="Print worksheet">
+                <i class="bi bi-printer"></i> Worksheet
+            </a>
+            <a href="/inspector/jobs.php" class="btn btn-sm btn-outline-light py-0">
+                <i class="bi bi-arrow-left"></i> Jobs
+            </a>
+        </div>
     </div>
     <div class="insp-card-body" style="font-size:.85rem;">
         <div class="row g-2">
@@ -150,7 +157,28 @@ require_once __DIR__ . '/includes/header.php';
                 <?= h($ins['zip'] ?? '') ?><br>
                 <?php if ($ins['phone_number']): ?>
                 <i class="bi bi-telephone"></i>
-                <a href="tel:<?= h($ins['phone_number']) ?>"><?= h($ins['phone_number']) ?></a>
+                <a href="tel:<?= h($ins['phone_number']) ?>"><?= h($ins['phone_number']) ?></a><br>
+                <?php endif; ?>
+                <?php
+                $map_addr = implode(', ', array_filter([
+                    $ins['address']    ?? '',
+                    $ins['city']       ?? '',
+                    $ins['state_code'] ?? '',
+                    $ins['zip']        ?? '',
+                ]));
+                $gmaps_url = 'https://maps.google.com/?q=' . urlencode($map_addr);
+                ?>
+                <?php if ($map_addr): ?>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-1 me-1"
+                        id="map-modal-btn"
+                        data-address="<?= h($map_addr) ?>"
+                        title="View on map">
+                    <i class="bi bi-map"></i> Map
+                </button>
+                <a href="<?= h($gmaps_url) ?>" target="_blank" rel="noopener"
+                   class="btn btn-outline-secondary btn-sm mt-1" title="Open in Google Maps">
+                    <i class="bi bi-box-arrow-up-right"></i> Google Maps
+                </a>
                 <?php endif; ?>
             </div>
             <div class="col-12 col-md-6">
@@ -161,7 +189,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <?php if ($ins['special_instructions'] || $ins['photo_instructions']): ?>
             <div class="col-12">
-                <div class="alert alert-warning py-2 mb-0" style="font-size:.82rem;">
+                <div class="alert alert-danger py-2 mb-0" style="font-size:.82rem;">
                     <?php if ($ins['special_instructions']): ?>
                     <strong>Special Instructions:</strong> <?= h($ins['special_instructions']) ?><br>
                     <?php endif; ?>
@@ -178,7 +206,7 @@ require_once __DIR__ . '/includes/header.php';
 <!-- ── Findings form ────────────────────────────────────────────────────── -->
 <div class="insp-card mb-3">
     <div class="insp-card-header">Inspection Report</div>
-    <div class="insp-card-body">
+    <div class="insp-card-body fia-form-section">
     <form method="POST" action="/inspector/save_job.php" id="findings-form">
         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
         <input type="hidden" name="fia"        value="<?= $fia ?>">
@@ -223,43 +251,83 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Towed / Driven</label>
-                        <input type="text" name="towed_driven" class="form-control form-control-sm"
-                               value="<?= val($ins, 'towed_driven') ?>">
+                        <select name="towed_driven" class="form-select form-select-sm">
+                            <?php foreach (['', 'Towed', 'Driven'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['towed_driven'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Engine Size</label>
                         <input type="text" name="engine_size" class="form-control form-control-sm"
                                value="<?= val($ins, 'engine_size') ?>">
                     </div>
-                    <div class="col-6">
+                    <div class="col-12">
                         <label class="form-label fw-semibold">Transmission</label>
-                        <input type="text" name="transmission_type" class="form-control form-control-sm"
+                        <input type="hidden" name="transmission_type" id="transmission_type"
                                value="<?= val($ins, 'transmission_type') ?>">
+                        <div class="d-flex gap-2">
+                            <select id="transmission_select" class="form-select form-select-sm" style="width:auto;flex:0 0 auto;">
+                                <?php foreach (['', 'Automatic', 'Manual', 'CVT', 'Allison', 'N/A'] as $opt): ?>
+                                <option value="<?= h($opt) ?>"><?= $opt === '' ? '— type —' : h($opt) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="text" id="transmission_detail" class="form-control form-control-sm"
+                                   placeholder="Detail (e.g. 5-speed, 4L60E)">
+                        </div>
+                        <small class="text-muted" style="font-size:.72rem;">Saved as: <span id="transmission_preview" class="fw-semibold"></span></small>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Drive Train</label>
-                        <input type="text" name="drive_train" class="form-control form-control-sm"
-                               value="<?= val($ins, 'drive_train') ?>">
+                        <select name="drive_train" class="form-select form-select-sm">
+                            <?php foreach (['', 'Front WD', 'Rear WD', 'All WD', '4x4'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['drive_train'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Commercial Use</label>
-                        <input type="text" name="commercial_use" class="form-control form-control-sm"
-                               value="<?= val($ins, 'commercial_use') ?>">
+                        <select name="commercial_use" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['commercial_use'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Impact Damage</label>
-                        <input type="text" name="impact_damage" class="form-control form-control-sm"
-                               value="<?= val($ins, 'impact_damage') ?>">
+                        <select name="impact_damage" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['impact_damage'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Service History Avail</label>
-                        <input type="text" name="service_history_avail" class="form-control form-control-sm"
-                               value="<?= val($ins, 'service_history_avail') ?>">
+                        <select name="service_history_avail" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No', 'N/A'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['service_history_avail'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Did Shop Sign Report</label>
-                        <input type="text" name="did_shop_sign_report" class="form-control form-control-sm"
-                               value="<?= val($ins, 'did_shop_sign_report') ?>">
+                        <select name="did_shop_sign_report" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['did_shop_sign_report'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Shop Rep Name</label>
@@ -280,20 +348,38 @@ require_once __DIR__ . '/includes/header.php';
                     'power_steering' => 'Power Steering',
                     'trans_fluid'    => 'Trans Fluid',
                 ];
+                $fluid_conditions = ['', 'New', 'Good', 'Fair', 'Poor', 'Burnt', 'Contaminated', 'N/A'];
+                $fluid_levels     = ['', 'Full', 'Good', 'Low', 'Empty', 'Drained', 'Needs Service', 'N/A'];
                 ?>
                 <table class="insp-table mb-3">
-                    <thead><tr><th>Fluid</th><th>Condition</th><th>Level</th></tr></thead>
+                    <thead><tr><th style="text-align: right;">Fluid</th><th>Condition</th><th>Level</th></tr></thead>
                     <tbody>
                     <?php foreach ($fluids as $key => $label):
-                        $ck = $key . '_cond';
-                        $lk = $key . '_level';
+                        $ck   = $key . '_cond';
+                        $lk   = $key . '_level';
+                        $cval = $ins[$ck] ?? '';
+                        $lval = $ins[$lk] ?? '';
                     ?>
                     <tr>
-                        <td style="font-size:.8rem;"><?= $label ?></td>
-                        <td><input type="text" name="<?= $ck ?>" class="form-control form-control-sm"
-                                   value="<?= val($ins, $ck) ?>" style="width:90px;"></td>
-                        <td><input type="text" name="<?= $lk ?>" class="form-control form-control-sm"
-                                   value="<?= val($ins, $lk) ?>" style="width:90px;"></td>
+                        <td style="font-size:.8rem; text-align: right;"><?= $label ?></td>
+                        <td>
+                            <select name="<?= $ck ?>" class="form-select form-select-sm" <?= $is_complete ? 'disabled' : '' ?>>
+                                <?php foreach ($fluid_conditions as $opt): ?>
+                                <option value="<?= h($opt) ?>" <?= $cval === $opt ? 'selected' : '' ?>>
+                                    <?= $opt === '' ? '— select —' : h($opt) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="<?= $lk ?>" class="form-select form-select-sm" <?= $is_complete ? 'disabled' : '' ?>>
+                                <?php foreach ($fluid_levels as $opt): ?>
+                                <option value="<?= h($opt) ?>" <?= $lval === $opt ? 'selected' : '' ?>>
+                                    <?= $opt === '' ? '— select —' : h($opt) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -312,23 +398,43 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Is Vehicle Torn Down</label>
-                        <input type="text" name="is_vehicle_torn_down" class="form-control form-control-sm"
-                               value="<?= val($ins, 'is_vehicle_torn_down') ?>">
+                        <select name="is_vehicle_torn_down" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['is_vehicle_torn_down'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Amount of Teardown</label>
-                        <input type="text" name="amount_of_teardown" class="form-control form-control-sm"
-                               value="<?= val($ins, 'amount_of_teardown') ?>">
+                        <select name="amount_of_teardown" class="form-select form-select-sm">
+                            <?php foreach (['', 'None', 'Partial', 'Full'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['amount_of_teardown'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Abuse Apparent</label>
-                        <input type="text" name="abuse_apparent" class="form-control form-control-sm"
-                               value="<?= val($ins, 'abuse_apparent') ?>">
+                        <select name="abuse_apparent" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['abuse_apparent'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-semibold">Collision Damage</label>
-                        <input type="text" name="collision_damage" class="form-control form-control-sm"
-                               value="<?= val($ins, 'collision_damage') ?>">
+                        <select name="collision_damage" class="form-select form-select-sm">
+                            <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= ($ins['collision_damage'] ?? '') === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -652,6 +758,46 @@ require_once __DIR__ . '/includes/header.php';
         uploadCount.textContent = files.length;
     }
 
+    // ── Transmission type: dropdown + detail text ────────────────────────
+
+    (function () {
+        const hidden   = document.getElementById('transmission_type');
+        const select   = document.getElementById('transmission_select');
+        const detail   = document.getElementById('transmission_detail');
+        const preview  = document.getElementById('transmission_preview');
+        if (!hidden) return;
+
+        const options  = ['Automatic', 'Manual', 'CVT', 'Allison', 'N/A'];
+
+        // Parse saved value back into dropdown + detail on page load
+        const saved = hidden.value.trim();
+        if (saved) {
+            let matched = '';
+            let rest    = saved;
+            for (const opt of options) {
+                if (saved.toUpperCase().startsWith(opt.toUpperCase())) {
+                    matched = opt;
+                    rest    = saved.slice(opt.length).trim();
+                    break;
+                }
+            }
+            select.value  = matched;
+            detail.value  = rest;
+        }
+
+        function sync() {
+            const type   = select.value.trim();
+            const extra  = detail.value.trim();
+            const combined = extra ? (type ? type + ' ' + extra : extra) : type;
+            hidden.value       = combined;
+            preview.textContent = combined || '—';
+        }
+
+        sync();
+        select.addEventListener('change', sync);
+        detail.addEventListener('input',  sync);
+    })();
+
     // ── Delete uploaded photo ─────────────────────────────────────────────
 
     document.querySelectorAll('.btn-delete-photo').forEach(btn => {
@@ -662,6 +808,117 @@ require_once __DIR__ . '/includes/header.php';
         });
     });
 
+})();
+</script>
+
+<!-- ── Map modal ──────────────────────────────────────────────────────────── -->
+<div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <span class="fw-semibold" id="map-modal-title">
+                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                    <span id="map-modal-addr"></span>
+                </span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" style="height:420px;">
+                <div id="leaflet-map" style="height:100%;width:100%;"></div>
+                <div id="map-loading" class="d-flex align-items-center justify-content-center"
+                     style="height:100%;display:none!important;">
+                    <div class="text-muted"><i class="bi bi-hourglass-split"></i> Loading map…</div>
+                </div>
+                <div id="map-error" class="d-flex align-items-center justify-content-center p-4"
+                     style="height:100%;display:none!important;">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-exclamation-circle" style="font-size:2rem;"></i>
+                        <p class="mt-2 mb-2">Could not locate this address.</p>
+                        <a id="map-error-link" href="#" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i> Open in Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-2 justify-content-between">
+                <small class="text-muted" id="map-modal-addr-footer"></small>
+                <a id="map-gmaps-link" href="#" target="_blank" rel="noopener"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-box-arrow-up-right"></i> Open in Google Maps
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+(function () {
+    const mapBtn = document.getElementById('map-modal-btn');
+    if (!mapBtn) return;
+
+    let leafletMap = null;
+
+    mapBtn.addEventListener('click', function () {
+        const address  = this.dataset.address;
+        const gmapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(address);
+
+        document.getElementById('map-modal-addr').textContent        = address;
+        document.getElementById('map-modal-addr-footer').textContent = address;
+        document.getElementById('map-gmaps-link').href               = gmapsUrl;
+        document.getElementById('map-error-link').href               = gmapsUrl;
+
+        // Show loading state
+        document.getElementById('leaflet-map').style.display  = 'none';
+        document.getElementById('map-loading').style.display  = 'flex';
+        document.getElementById('map-error').style.display    = 'none';
+
+        const modal = new bootstrap.Modal(document.getElementById('mapModal'));
+        modal.show();
+
+        // Geocode via Nominatim (OpenStreetMap) — free, no API key
+        const encoded = encodeURIComponent(address);
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`, {
+            headers: { 'Accept-Language': 'en' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('map-loading').style.display = 'none';
+            if (!data.length) {
+                document.getElementById('map-error').style.display = 'flex';
+                return;
+            }
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+
+            document.getElementById('leaflet-map').style.display = 'block';
+
+            if (leafletMap) {
+                leafletMap.remove();
+                leafletMap = null;
+            }
+            leafletMap = L.map('leaflet-map').setView([lat, lon], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(leafletMap);
+            L.marker([lat, lon])
+                .addTo(leafletMap)
+                .bindPopup(address)
+                .openPopup();
+
+            // Force redraw after modal animation completes
+            document.getElementById('mapModal').addEventListener('shown.bs.modal', () => {
+                leafletMap && leafletMap.invalidateSize();
+            }, { once: true });
+        })
+        .catch(() => {
+            document.getElementById('map-loading').style.display = 'none';
+            document.getElementById('map-error').style.display   = 'flex';
+        });
+    });
 })();
 </script>
 

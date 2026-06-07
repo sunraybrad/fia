@@ -26,7 +26,7 @@ $active_nav = $active_nav ?? '';
     <div class="container-fluid">
 
         <a class="navbar-brand" href="/inspector/index.php">
-            <img src="/images/logo_horiz_600.jpg" alt="Florida Inspection Associates">
+            <img src="/images/logo/logo_horiz_600_inspect.png" alt="Florida Inspection Associates">
         </a>
 
         <button class="navbar-toggler" type="button"

@@ -32,11 +32,11 @@ if ($flash !== null && !in_array($flash['type'] ?? '', ['success', 'danger', 'wa
 </head>
 <body>
 
-<nav class="navbar navbar-expand-md fia-navbar mb-3" aria-label="Client navigation">
+<nav class="navbar navbar-expand-md fia-navbar client-navbar mb-3" aria-label="Client navigation">
     <div class="container-fluid">
 
         <a class="navbar-brand" href="/client/">
-            <img src="/images/logo_horiz_600.jpg" alt="Florida Inspection Associates">
+            <img src="/images/logo/logo_horiz_600_client.png" alt="Florida Inspection Associates">
         </a>
 
         <button class="navbar-toggler" type="button"

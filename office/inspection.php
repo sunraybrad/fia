@@ -135,6 +135,21 @@ if (!$emails_stmt->execute()) {
 }
 $emails_stmt->close();
 
+// Load attachments for each email
+$email_attachments_map = [];
+if (!empty($emails)) {
+    $eids = implode(',', array_map('intval', array_column($emails, 'email_id')));
+    $ea_result = $db->query(
+        "SELECT email_id, attachment_id, filename, file_ext, legacy_path
+           FROM email_attachments
+          WHERE email_id IN ({$eids}) AND is_archived = FALSE
+          ORDER BY email_id, attachment_id"
+    );
+    while ($ea = $ea_result->fetch_assoc()) {
+        $email_attachments_map[(int)$ea['email_id']][] = $ea;
+    }
+}
+
 // ── Load warranty co contacts (for compose dropdown) ─────────────────────
 
 $warco_contacts = [];
@@ -361,7 +376,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="dispatch">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
 
     <div class="row g-3">
 
@@ -398,6 +413,15 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <?php endif; ?>
             </div>
+
+            <?php if ($ins['status'] === 'Assigned'): ?>
+            <div class="my-2">
+                <a href="/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=assignment"
+                   class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-envelope-paper"></i> Send Assignment Worksheet
+                </a>
+            </div>
+            <?php endif; ?>
 
             <!-- Assignment fields -->
             <div class="row g-2">
@@ -580,7 +604,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="vehicle">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
 
         <div class="col-md-6">
@@ -670,7 +694,13 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Did Shop Sign Report</label>
-                    <input type="text" name="did_shop_sign_report" class="form-control form-control-sm" value="<?= val($ins,'did_shop_sign_report') ?>">
+                    <select name="did_shop_sign_report" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['did_shop_sign_report'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-semibold">Shop Comments</label>
@@ -713,7 +743,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="findings1">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
 
         <!-- Fluid conditions -->
@@ -727,6 +757,8 @@ require_once __DIR__ . '/includes/header.php';
                 'power_steering'  => 'Power Steering',
                 'trans_fluid'     => 'Trans Fluid',
             ];
+            $fluid_conditions = ['', 'New', 'Good', 'Fair', 'Poor', 'Burnt', 'Contaminated', 'N/A'];
+            $fluid_levels     = ['', 'Full', 'Good', 'Low', 'Empty', 'Drained', 'Needs Service', 'N/A'];
             ?>
             <table class="fia-table">
                 <thead><tr><th class="text-start">Fluid</th><th>Condition</th><th>Level</th></tr></thead>
@@ -734,13 +766,29 @@ require_once __DIR__ . '/includes/header.php';
                 <?php foreach ($fluids as $key => $label):
                     $cond_key  = $key . '_cond';
                     $level_key = $key . '_level';
+                    $cval      = $ins[$cond_key]  ?? '';
+                    $lval      = $ins[$level_key] ?? '';
                 ?>
                 <tr>
                     <td class="text-start" style="font-size:.82rem;"><?= $label ?></td>
-                    <td><input type="text" name="<?= $cond_key ?>" class="form-control form-control-sm"
-                               value="<?= val($ins, $cond_key) ?>" style="width:100px;"></td>
-                    <td><input type="text" name="<?= $level_key ?>" class="form-control form-control-sm"
-                               value="<?= val($ins, $level_key) ?>" style="width:100px;"></td>
+                    <td>
+                        <select name="<?= $cond_key ?>" class="form-select form-select-sm">
+                            <?php foreach ($fluid_conditions as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= $cval === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="<?= $level_key ?>" class="form-select form-select-sm">
+                            <?php foreach ($fluid_levels as $opt): ?>
+                            <option value="<?= h($opt) ?>" <?= $lval === $opt ? 'selected' : '' ?>>
+                                <?= $opt === '' ? '— select —' : h($opt) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -755,17 +803,39 @@ require_once __DIR__ . '/includes/header.php';
                     <label class="form-label fw-semibold">Engine Size</label>
                     <input type="text" name="engine_size" class="form-control form-control-sm" value="<?= val($ins,'engine_size') ?>">
                 </div>
-                <div class="col-4">
+                <div class="col-8">
                     <label class="form-label fw-semibold">Transmission</label>
-                    <input type="text" name="transmission_type" class="form-control form-control-sm" value="<?= val($ins,'transmission_type') ?>">
+                    <input type="hidden" name="transmission_type" id="off_transmission_type" value="<?= val($ins,'transmission_type') ?>">
+                    <div class="d-flex gap-1">
+                        <select id="off_transmission_select" class="form-select form-select-sm" style="width:auto;flex:0 0 auto;">
+                            <?php foreach (['', 'Automatic', 'Manual', 'CVT', 'Allison', 'N/A'] as $opt): ?>
+                            <option value="<?= h($opt) ?>"><?= $opt === '' ? '— type —' : h($opt) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" id="off_transmission_detail" class="form-control form-control-sm"
+                               placeholder="Detail (e.g. 5-speed, 4L60E)">
+                    </div>
+                    <small class="text-muted" style="font-size:.72rem;">Saved as: <span id="off_transmission_preview" class="fw-semibold"></span></small>
                 </div>
                 <div class="col-4">
                     <label class="form-label fw-semibold">Drive Train</label>
-                    <input type="text" name="drive_train" class="form-control form-control-sm" value="<?= val($ins,'drive_train') ?>">
+                    <select name="drive_train" class="form-select form-select-sm">
+                        <?php foreach (['', 'Front WD', 'Rear WD', 'All WD', '4x4'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['drive_train'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-4">
                     <label class="form-label fw-semibold">Towed/Driven</label>
-                    <input type="text" name="towed_driven" class="form-control form-control-sm" value="<?= val($ins,'towed_driven') ?>">
+                    <select name="towed_driven" class="form-select form-select-sm">
+                        <?php foreach (['', 'Towed', 'Driven'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['towed_driven'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-4">
                     <label class="form-label fw-semibold">Tire Size</label>
@@ -796,15 +866,33 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Commercial Use</label>
-                    <input type="text" name="commercial_use" class="form-control form-control-sm" value="<?= val($ins,'commercial_use') ?>">
+                    <select name="commercial_use" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['commercial_use'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Impact Damage</label>
-                    <input type="text" name="impact_damage" class="form-control form-control-sm" value="<?= val($ins,'impact_damage') ?>">
+                    <select name="impact_damage" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['impact_damage'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Service History Avail</label>
-                    <input type="text" name="service_history_avail" class="form-control form-control-sm" value="<?= val($ins,'service_history_avail') ?>">
+                    <select name="service_history_avail" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No', 'N/A'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['service_history_avail'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Towing</label>
@@ -843,7 +931,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="findings2">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
         <div class="col-md-6">
             <div class="row g-2">
@@ -857,15 +945,33 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Is Vehicle Torn Down</label>
-                    <input type="text" name="is_vehicle_torn_down" class="form-control form-control-sm" value="<?= val($ins,'is_vehicle_torn_down') ?>">
+                    <select name="is_vehicle_torn_down" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['is_vehicle_torn_down'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Amount of Teardown</label>
-                    <input type="text" name="amount_of_teardown" class="form-control form-control-sm" value="<?= val($ins,'amount_of_teardown') ?>">
+                    <select name="amount_of_teardown" class="form-select form-select-sm">
+                        <?php foreach (['', 'None', 'Partial', 'Full'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['amount_of_teardown'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Collision Damage</label>
-                    <input type="text" name="collision_damage" class="form-control form-control-sm" value="<?= val($ins,'collision_damage') ?>">
+                    <select name="collision_damage" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['collision_damage'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Failed/Damaged</label>
@@ -873,7 +979,13 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Abuse Apparent</label>
-                    <input type="text" name="abuse_apparent" class="form-control form-control-sm" value="<?= val($ins,'abuse_apparent') ?>">
+                    <select name="abuse_apparent" class="form-select form-select-sm">
+                        <?php foreach (['', 'Yes', 'No'] as $opt): ?>
+                        <option value="<?= h($opt) ?>" <?= ($ins['abuse_apparent'] ?? '') === $opt ? 'selected' : '' ?>>
+                            <?= $opt === '' ? '— select —' : h($opt) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-6">
                     <label class="form-label fw-semibold">Is Service Related</label>
@@ -928,7 +1040,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="tire">
 <?php $t = $tire ?? []; ?>
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <?php if ($ins['inspection_type'] !== 'Tire Inspection'): ?>
     <p class="text-muted">This is not a tire inspection.</p>
     <?php else: ?>
@@ -1033,7 +1145,7 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="billing">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
     <div class="row g-3">
 
         <!-- Warranty Co rates (read-only reference) -->
@@ -1188,7 +1300,7 @@ require_once __DIR__ . '/includes/header.php';
      TAB 7 — PHOTOS
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="tab-pane fade <?= $active_tab === 'photos' ? 'show active' : '' ?>" id="tab-photos" role="tabpanel">
-<div class="fia-card-body">
+<div class="fia-card-body fia-form-section">
 
     <!-- Upload zone -->
     <form method="POST" action="/office/upload_photo.php"
@@ -1367,11 +1479,12 @@ require_once __DIR__ . '/includes/header.php';
         </button>
     </div>
     <div id="compose-form-wrap" style="display:none;">
-    <form method="POST" action="/office/send_inspection_email.php" id="compose-form">
+    <form method="POST" action="/office/send_inspection_email.php" id="compose-form" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token"  value="<?= csrf_token() ?>">
         <input type="hidden" name="fia"         value="<?= $fia ?>">
         <input type="hidden" name="recipient_type" id="recipient_type" value="inspector">
         <input type="hidden" name="warranty_co_id"  value="<?= (int)($ins['warranty_co_id'] ?? 0) ?>">
+        <input type="hidden" name="template" id="email-template-hidden" value="">
         <div class="row g-2">
 
             <!-- Row 1: Template + Recipient toggle -->
@@ -1442,6 +1555,23 @@ require_once __DIR__ . '/includes/header.php';
                           rows="10" required></textarea>
             </div>
 
+            <!-- Attachments -->
+            <div class="col-12">
+                <label class="form-label fw-semibold" style="font-size:.82rem;">Attachments</label>
+                <!-- Auto-attachment from template (hidden until a template with one is selected) -->
+                <div id="auto-attachment-badge" class="align-items-center gap-1 me-2 mb-1
+                     px-2 py-1 rounded border border-primary text-primary" style="display:none; font-size:.78rem;">
+                    <i class="bi bi-paperclip"></i>
+                    <span id="auto-attachment-name"></span>
+                    <span class="text-muted" style="font-size:.7rem;">(auto)</span>
+                </div>
+                <!-- Manual file attachments -->
+                <input type="file" name="manual_attachments[]" id="manual-attachments"
+                       class="form-control form-control-sm" multiple
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx">
+                <div class="form-text" style="font-size:.72rem;">PDF, Word, images, spreadsheets accepted.</div>
+            </div>
+
             <div class="col-12 d-flex gap-2">
                 <button type="submit" class="btn btn-fia btn-sm">
                     <i class="bi bi-send"></i> Send Email
@@ -1491,6 +1621,27 @@ require_once __DIR__ . '/includes/header.php';
         </tr>
         <tr class="collapse" id="email-body-<?= (int)$em['email_id'] ?>">
             <td colspan="5">
+                <?php $atts = $email_attachments_map[(int)$em['email_id']] ?? []; ?>
+                <?php if (!empty($atts)): ?>
+                <div class="px-2 pt-2 d-flex flex-wrap gap-1">
+                    <?php foreach ($atts as $att):
+                        $has_file = !empty($att['legacy_path']);
+                    ?>
+                    <?php if ($has_file): ?>
+                    <a href="/<?= h($att['legacy_path']) ?>" target="_blank"
+                       class="badge bg-light text-dark border text-decoration-none"
+                       style="font-size:.72rem;">
+                        <i class="bi bi-paperclip"></i> <?= h($att['filename']) ?>
+                    </a>
+                    <?php else: ?>
+                    <span class="badge bg-light text-muted border" style="font-size:.72rem;"
+                          title="Auto-generated — regenerate via Print Worksheet">
+                        <i class="bi bi-paperclip"></i> <?= h($att['filename']) ?>
+                    </span>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
                 <pre class="mb-0 p-2" style="font-size:.78rem; white-space:pre-wrap; background:#f8f9fa; border-radius:4px;"><?= h($em['body_text'] ?? '') ?></pre>
             </td>
         </tr>
@@ -1502,6 +1653,32 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 </div><!-- /.tab-content -->
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     ASSIGNMENT WORKSHEET MODAL
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="assignWorksheetModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-person-check text-success me-1"></i> Inspector Assigned
+                </h6>
+            </div>
+            <div class="modal-body" style="font-size:.88rem;">
+                Send the assignment worksheet to the inspector now?
+            </div>
+            <div class="modal-footer py-2 gap-2">
+                <button type="button" class="btn btn-fia btn-sm" id="modal-send-worksheet-btn">
+                    <i class="bi bi-envelope-paper"></i> Send Worksheet
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="modal-skip-btn">
+                    Skip
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      UNSAVED CHANGES MODAL
@@ -1538,6 +1715,44 @@ require_once __DIR__ . '/includes/header.php';
 <script>
 (function () {
     'use strict';
+
+    // ── Transmission type: dropdown + detail text ─────────────────────────
+
+    (function () {
+        const hidden  = document.getElementById('off_transmission_type');
+        const select  = document.getElementById('off_transmission_select');
+        const detail  = document.getElementById('off_transmission_detail');
+        const preview = document.getElementById('off_transmission_preview');
+        if (!hidden) return;
+
+        const options = ['Automatic', 'Manual', 'CVT', 'Allison', 'N/A'];
+
+        const saved = hidden.value.trim();
+        if (saved) {
+            let matched = '', rest = saved;
+            for (const opt of options) {
+                if (saved.toUpperCase().startsWith(opt.toUpperCase())) {
+                    matched = opt;
+                    rest    = saved.slice(opt.length).trim();
+                    break;
+                }
+            }
+            select.value = matched;
+            detail.value = rest;
+        }
+
+        function sync() {
+            const type     = select.value.trim();
+            const extra    = detail.value.trim();
+            const combined = extra ? (type ? type + ' ' + extra : extra) : type;
+            hidden.value        = combined;
+            preview.textContent = combined || '—';
+        }
+
+        sync();
+        select.addEventListener('change', sync);
+        detail.addEventListener('input',  sync);
+    })();
 
     // ── Dirty tracking ────────────────────────────────────────────────────
 
@@ -1693,7 +1908,8 @@ require_once __DIR__ . '/includes/header.php';
                 .then(data => {
                     if (data.ok) {
                         clearDirty();
-                        window.location.href = '/office/inspection.php?fia=<?= $fia ?>&tab=dispatch&saved=1';
+                        const modal = new bootstrap.Modal(document.getElementById('assignWorksheetModal'));
+                        modal.show();
                     } else {
                         alert('Assignment failed: ' + (data.error || 'unknown error'));
                         document.querySelectorAll('.assign-btn').forEach(b => b.disabled = false);
@@ -1766,7 +1982,9 @@ require_once __DIR__ . '/includes/header.php';
     const TEMPLATES = {
         assignment: {
             recipient: 'inspector',
+            subject:   `FIA Inspection Worksheet for ${TPL.fia}`,
             body: `Hi ${TPL.inspector_name},\n\nYou have been assigned the following inspection:\n\nFIA #: ${TPL.fia}\nShop: ${TPL.shop}\nAddress: ${TPL.address}\nPhone: ${TPL.phone}\nVehicle: ${TPL.vehicle}\nClaim #: ${TPL.claim}\nContract #: ${TPL.contract}\nETA: ${TPL.eta}\nQuoted Fee: $${TPL.quoted_fee}\n\nPlease confirm receipt of this assignment.\n\nThank you,\nFlorida Inspection Associates`,
+            attachment: `FIA_Worksheet_${TPL.fia}.pdf`,
         },
         reminder: {
             recipient: 'inspector',
@@ -1782,13 +2000,44 @@ require_once __DIR__ . '/includes/header.php';
         },
     };
 
-    document.getElementById('email-template')?.addEventListener('change', function () {
-        const tpl = TEMPLATES[this.value];
+    function applyTemplate(key) {
+        const tpl = TEMPLATES[key];
         if (!tpl) return;
         setRecipient(tpl.recipient);
+        if (tpl.subject) document.getElementById('email-subject').value = tpl.subject;
         document.getElementById('email-body-input').value = tpl.body;
+        document.getElementById('email-template-hidden').value = key;
+        // Show auto-attachment badge if template has one
+        const badge = document.getElementById('auto-attachment-badge');
+        const name  = document.getElementById('auto-attachment-name');
+        if (tpl.attachment) {
+            name.textContent = tpl.attachment;
+            badge.style.display = 'inline-flex';
+        } else {
+            name.textContent = '';
+            badge.style.display = 'none';
+        }
         openCompose();
+    }
+
+    document.getElementById('email-template')?.addEventListener('change', function () {
+        applyTemplate(this.value);
     });
+
+    // Post-assignment modal buttons
+    document.getElementById('modal-send-worksheet-btn')?.addEventListener('click', function () {
+        window.location.href = '/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=assignment';
+    });
+    document.getElementById('modal-skip-btn')?.addEventListener('click', function () {
+        window.location.href = '/office/inspection.php?fia=<?= $fia ?>&tab=dispatch&saved=1';
+    });
+
+    // Auto-open compose with a specific template if ?compose=X is in the URL
+    const autoCompose = <?= json_encode($_GET['compose'] ?? '') ?>;
+    if (autoCompose && TEMPLATES[autoCompose]) {
+        document.getElementById('email-template').value = autoCompose;
+        applyTemplate(autoCompose);
+    }
 
     // ── Office photo upload zone ──────────────────────────────────────────
 
