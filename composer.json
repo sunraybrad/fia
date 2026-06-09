@@ -1,6 +1,7 @@
 {
     "require": {
         "tecnickcom/tcpdf": "^6.7",
-        "setasign/fpdi-tcpdf": "^2.3"
+        "setasign/fpdi-tcpdf": "^2.3",
+        "quickbooks/v3-php-sdk": "^6.2"
     }
 }
