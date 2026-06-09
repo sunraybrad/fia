@@ -1146,6 +1146,29 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="fia"        value="<?= $fia ?>">
 <input type="hidden" name="tab"        value="billing">
 <div class="fia-card-body fia-form-section">
+
+    <!-- Billing Report (PDF) actions -->
+    <div class="d-flex align-items-center gap-2 mb-3 p-2 border rounded bg-light">
+        <strong class="me-2" style="font-size:.85rem;">Billing Report:</strong>
+        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>" target="_blank"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-eye"></i> Preview
+        </a>
+        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&save=1"
+           class="btn btn-fia btn-sm">
+            <i class="bi bi-archive"></i> Generate &amp; Archive
+        </a>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                onclick="window.location.href='/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=billing'">
+            <i class="bi bi-envelope-paper"></i> Email to Warranty Co
+        </button>
+        <?php if (!empty($_GET['report_saved'])): ?>
+        <span class="text-success ms-2" style="font-size:.82rem;">
+            <i class="bi bi-check-circle"></i> Report archived as FIA_Report_<?= $fia ?>.pdf
+        </span>
+        <?php endif; ?>
+    </div>
+
     <div class="row g-3">
 
         <!-- Warranty Co rates (read-only reference) -->
@@ -1495,6 +1518,7 @@ require_once __DIR__ . '/includes/header.php';
                     <option value="assignment">Assignment to Inspector</option>
                     <option value="reminder">Reminder to Inspector</option>
                     <option value="warco_notify">Notification to Warranty Co</option>
+                    <option value="billing">Billing Report to Warranty Co</option>
                     <option value="manual">Manual / Custom</option>
                 </select>
             </div>
@@ -1993,6 +2017,12 @@ require_once __DIR__ . '/includes/header.php';
         warco_notify: {
             recipient: 'warco',
             body: `Dear ${TPL.warco_supervisor || TPL.warco_name},\n\nWe are writing to confirm that an inspector has been assigned to the following inspection:\n\nFIA #: ${TPL.fia}\nClaim #: ${TPL.claim}\nContract #: ${TPL.contract}\nVehicle: ${TPL.vehicle}\nShop: ${TPL.shop}\nETA: ${TPL.eta}\n\nWe will follow up once the inspection is complete.\n\nFlorida Inspection Associates`,
+        },
+        billing: {
+            recipient: 'warco',
+            subject:   `FIA Billing Report — ${TPL.fia} / Claim ${TPL.claim}`,
+            body: `Dear ${TPL.warco_supervisor || TPL.warco_name},\n\nPlease find attached the completed Billing Report for the following inspection:\n\nFIA #: ${TPL.fia}\nClaim #: ${TPL.claim}\nContract #: ${TPL.contract}\nVehicle: ${TPL.vehicle}\nShop: ${TPL.shop}\n\nLet us know if you have any questions.\n\nFlorida Inspection Associates`,
+            attachment: `FIA_Report_${TPL.fia}.pdf`,
         },
         manual: {
             recipient: 'inspector',

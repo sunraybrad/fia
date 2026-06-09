@@ -7,6 +7,7 @@ require_once 'C:\inetpub\fia_private\config.php';
 require_once 'C:\inetpub\fia_private\db.php';
 require_once __DIR__ . '/../includes/mailer.php';
 require_once __DIR__ . '/../includes/worksheet_pdf.php';
+require_once __DIR__ . '/../includes/billing_pdf.php';
 require_once __DIR__ . '/includes/auth.php';
 init_session();
 require_office();
@@ -65,6 +66,23 @@ if ($template === 'assignment') {
     if ($pdf_bytes !== false) {
         $attachments[] = [
             'name'  => 'FIA_Worksheet_' . $fia . '.pdf',
+            'bytes' => $pdf_bytes,
+        ];
+    }
+}
+
+// Attach the archived Billing Report for billing emails to the warranty co.
+// Use the on-disk archive copy if it's been generated/saved already (so the
+// client receives exactly what's on file); otherwise generate on the fly.
+if ($template === 'billing') {
+    $archived_path = billing_pdf_path($fia);
+    $pdf_bytes = is_file($archived_path)
+        ? file_get_contents($archived_path)
+        : billing_pdf_bytes($fia, $db);
+
+    if ($pdf_bytes !== false && $pdf_bytes !== null) {
+        $attachments[] = [
+            'name'  => 'FIA_Report_' . $fia . '.pdf',
             'bytes' => $pdf_bytes,
         ];
     }
