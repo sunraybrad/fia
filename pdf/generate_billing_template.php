@@ -228,7 +228,7 @@ function _billing_append_media_pages(Fpdi $pdf, array $data): void
     if (empty($media)) return;
 
     $fia      = $data['fia_number'] ?? '';
-    $logoPath = __DIR__ . '/../images/logo/logo_horiz_600_admin.png'; // same mark used in office/includes/header.php
+    $logoPath = __DIR__ . '/../images/logo/logo_horiz_600_report.png';
     $hasLogo  = is_file($logoPath);
 
     $cellW = (BR_PAGE_W - 2 * BR_MARGIN - (BR_GRID_COLS - 1) * BR_GUTTER) / BR_GRID_COLS;
