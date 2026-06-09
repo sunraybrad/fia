@@ -127,10 +127,17 @@ if (!$is_new && $inspector_id) {
 $valid_tabs = ['detail', 'history', 'emails'];
 $tab_key    = $is_new ? 'new' : 'insp_' . $inspector_id;
 
-if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
-    $_SESSION['insp_tab_' . $tab_key] = $_GET['tab'];
+if (!isset($_SESSION['inspector_tabs']) || !is_array($_SESSION['inspector_tabs'])) {
+    $_SESSION['inspector_tabs'] = [];
 }
-$active_tab = $_SESSION['insp_tab_' . $tab_key] ?? 'detail';
+if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
+    if (!isset($_SESSION['inspector_tabs'][$tab_key]) && count($_SESSION['inspector_tabs']) >= 20) {
+        reset($_SESSION['inspector_tabs']);
+        unset($_SESSION['inspector_tabs'][key($_SESSION['inspector_tabs'])]);
+    }
+    $_SESSION['inspector_tabs'][$tab_key] = $_GET['tab'];
+}
+$active_tab = $_SESSION['inspector_tabs'][$tab_key] ?? 'detail';
 
 // ── Flash ─────────────────────────────────────────────────────────────────
 

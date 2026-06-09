@@ -95,7 +95,7 @@ function _billing_fetch(int $fia, mysqli $db): array|false
             i.overall_condition,
 
             -- Fluids (level / condition pairs)
-            i.engine_oil_level,      i.engine_oil_condition,
+            i.engine_oil_level,      i.engine_oil_cond,
             i.coolant_level,         i.coolant_cond,
             i.brake_fluid_level,     i.brake_fluid_cond,
             i.power_steering_level,  i.power_steering_cond,

@@ -118,37 +118,50 @@ $photos_stmt->close();
 
 $vPix_base = DEV_MODE ? '//fiainspectors.com/vPix/' : '/vPix/';
 
-// ── Load emails (Emails tab) ──────────────────────────────────────────────
+// ── Load emails + attachments (Emails tab) ───────────────────────────────
+
+$emails               = [];
+$email_attachments_map = [];
 
 $emails_stmt = $db->prepare(
-    "SELECT email_id, sent_at, `status`, from_address, to_address, `subject`, body_text
-       FROM emails
-      WHERE fia_number = ?
-      ORDER BY sent_at DESC"
+    "SELECT e.email_id, e.sent_at, e.`status`, e.from_address, e.to_address, e.`subject`, e.body_text,
+            ea.attachment_id, ea.filename, ea.file_ext, ea.legacy_path
+       FROM emails e
+       LEFT JOIN email_attachments ea ON ea.email_id = e.email_id AND ea.is_archived = FALSE
+      WHERE e.fia_number = ?
+      ORDER BY e.sent_at DESC, e.email_id DESC, ea.attachment_id ASC"
 );
 $emails_stmt->bind_param('i', $fia);
 if (!$emails_stmt->execute()) {
     error_log('Query failed [office/inspection.php/emails ' . $fia . ']: ' . $db->error);
-    $emails = [];
 } else {
-    $emails = $emails_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-$emails_stmt->close();
-
-// Load attachments for each email
-$email_attachments_map = [];
-if (!empty($emails)) {
-    $eids = implode(',', array_map('intval', array_column($emails, 'email_id')));
-    $ea_result = $db->query(
-        "SELECT email_id, attachment_id, filename, file_ext, legacy_path
-           FROM email_attachments
-          WHERE email_id IN ({$eids}) AND is_archived = FALSE
-          ORDER BY email_id, attachment_id"
-    );
-    while ($ea = $ea_result->fetch_assoc()) {
-        $email_attachments_map[(int)$ea['email_id']][] = $ea;
+    $seen = [];
+    $result = $emails_stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $eid = (int)$row['email_id'];
+        if (!isset($seen[$eid])) {
+            $seen[$eid] = true;
+            $emails[] = [
+                'email_id'     => $row['email_id'],
+                'sent_at'      => $row['sent_at'],
+                'status'       => $row['status'],
+                'from_address' => $row['from_address'],
+                'to_address'   => $row['to_address'],
+                'subject'      => $row['subject'],
+                'body_text'    => $row['body_text'],
+            ];
+        }
+        if ($row['attachment_id'] !== null) {
+            $email_attachments_map[$eid][] = [
+                'attachment_id' => $row['attachment_id'],
+                'filename'      => $row['filename'],
+                'file_ext'      => $row['file_ext'],
+                'legacy_path'   => $row['legacy_path'],
+            ];
+        }
     }
 }
+$emails_stmt->close();
 
 // ── Load warranty co contacts (for compose dropdown) ─────────────────────
 
@@ -191,10 +204,17 @@ $default_tab = match($ins['status']) {
     default      => 'dispatch',
 };
 
-if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
-    $_SESSION['insp_tab_' . $fia] = $_GET['tab'];
+if (!isset($_SESSION['insp_tabs']) || !is_array($_SESSION['insp_tabs'])) {
+    $_SESSION['insp_tabs'] = [];
 }
-$active_tab = $_SESSION['insp_tab_' . $fia] ?? $default_tab;
+if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
+    if (!isset($_SESSION['insp_tabs'][$fia]) && count($_SESSION['insp_tabs']) >= 20) {
+        reset($_SESSION['insp_tabs']);
+        unset($_SESSION['insp_tabs'][key($_SESSION['insp_tabs'])]);
+    }
+    $_SESSION['insp_tabs'][$fia] = $_GET['tab'];
+}
+$active_tab = $_SESSION['insp_tabs'][$fia] ?? $default_tab;
 
 // ── Flash message ─────────────────────────────────────────────────────────
 

@@ -48,6 +48,8 @@ if ($is_edit) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    verify_csrf();
+
     $posted_date  = trim($_POST['posted_date']  ?? '');
     $audience     = trim($_POST['audience']     ?? '');
     $category     = trim($_POST['category']     ?? '');
@@ -59,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($audience === '')  $errors[] = 'Audience is required.';
     if (!in_array($audience, ['Inspectors', 'Clients', 'Both'], true))
         $errors[] = 'Invalid audience.';
+    $valid_categories = ['', 'URGENT..MUST READ', 'URGENT...HIGH IMPORTANCE..READ', 'IMPORTANT UPDATE', 'FIA Workflow', 'FIA ADMIN', 'Tech Note', 'General News'];
+    if (!in_array($category, $valid_categories, true))
+        $errors[] = 'Invalid category.';
 
     $date_val = $posted_date !== '' ? $posted_date : null;
 
@@ -79,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $upd->execute();
             $upd->close();
+            log_audit('message.save', 'message', $msg_id, ['subject' => $subject]);
         } else {
             $ins = $db->prepare(
                 "INSERT INTO messages (posted_date, audience, category, subject, message_body)
@@ -90,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins->execute();
             $msg_id = (int)$db->insert_id;
             $ins->close();
+            log_audit('message.create', 'message', $msg_id, ['subject' => $subject]);
         }
         header('Location: /office/messages.php?saved=1');
         exit;
@@ -130,6 +137,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="fia-card-body">
 
         <form method="POST" action="/office/message.php<?= $is_edit ? '?id=' . $msg_id : '' ?>">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
             <div class="row g-3 mb-3">
                 <div class="col-md-4">

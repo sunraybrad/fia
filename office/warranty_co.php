@@ -156,10 +156,17 @@ if (!$is_new && $wc_id) {
 $valid_tabs = ['details', 'contacts', 'rates', 'history', 'emails'];
 $tab_key    = $is_new ? 'new' : 'wc_' . $wc_id;
 
-if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
-    $_SESSION['wc_tab_' . $tab_key] = $_GET['tab'];
+if (!isset($_SESSION['warco_tabs']) || !is_array($_SESSION['warco_tabs'])) {
+    $_SESSION['warco_tabs'] = [];
 }
-$active_tab = $_SESSION['wc_tab_' . $tab_key] ?? 'details';
+if (isset($_GET['tab']) && in_array($_GET['tab'], $valid_tabs, true)) {
+    if (!isset($_SESSION['warco_tabs'][$tab_key]) && count($_SESSION['warco_tabs']) >= 20) {
+        reset($_SESSION['warco_tabs']);
+        unset($_SESSION['warco_tabs'][key($_SESSION['warco_tabs'])]);
+    }
+    $_SESSION['warco_tabs'][$tab_key] = $_GET['tab'];
+}
+$active_tab = $_SESSION['warco_tabs'][$tab_key] ?? 'details';
 
 // ── Flash ─────────────────────────────────────────────────────────────────
 

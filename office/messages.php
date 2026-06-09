@@ -26,13 +26,15 @@ function category_badge(string $cat): string {
 // ── Archive / restore toggle ──────────────────────────────────────────────
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_archive'])) {
+    verify_csrf();
     $msg_id    = (int)$_POST['message_id'];
     $archive   = (int)$_POST['archive']; // 1 = archive, 0 = restore
     $stmt = $db->prepare("UPDATE messages SET is_archived = ? WHERE message_id = ?");
     $stmt->bind_param('ii', $archive, $msg_id);
     $stmt->execute();
     $stmt->close();
-    header('Location: /office/messages.php' . ($archive ? '' : '?tab=active'));
+    log_audit($archive ? 'message.archive' : 'message.restore', 'message', $msg_id);
+    header('Location: /office/messages.php' . ($archive ? '?deleted=1' : '?restored=1&tab=active'));
     exit;
 }
 
@@ -151,6 +153,7 @@ require_once __DIR__ . '/includes/header.php';
                     </a>
                     <form method="POST" action="/office/messages.php" class="d-inline"
                           onsubmit="return confirm('<?= $show_archived ? 'Restore this message?' : 'Archive this message? Inspectors will no longer see it.' ?>')">
+                        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                         <input type="hidden" name="message_id" value="<?= (int)$msg['message_id'] ?>">
                         <input type="hidden" name="archive"    value="<?= $show_archived ? '0' : '1' ?>">
                         <button type="submit" name="toggle_archive"

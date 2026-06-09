@@ -256,7 +256,7 @@ switch ($tab) {
     // ── Findings 1 ────────────────────────────────────────────────────────
     case 'findings1':
         $fields = [
-            'engine_oil_condition'   => post_str('engine_oil_condition'),
+            'engine_oil_cond'        => post_str('engine_oil_cond'),
             'engine_oil_level'       => post_str('engine_oil_level'),
             'coolant_cond'           => post_str('coolant_cond'),
             'coolant_level'          => post_str('coolant_level'),
