@@ -167,7 +167,7 @@ function page_url(int $p): string {
         'warco'     => $_GET['warco']     ?? '',
         'claim'     => $_GET['claim']     ?? '',
         'contract'  => $_GET['contract']  ?? '',
-        'archived'  => $show_archived ? '1' : '',
+        'archived'  => isset($_GET['archived']) ? '1' : '',
         'tab'       => $_GET['tab']       ?? '',
         'page'      => $p > 1 ? $p : null,
     ]);
