@@ -221,6 +221,8 @@ $active_tab = $_SESSION['insp_tabs'][$fia] ?? $default_tab;
 $flash = null;
 if (isset($_GET['saved'])) {
     $flash = ['type' => 'success', 'msg' => 'Changes saved successfully.'];
+} elseif (isset($_GET['locked'])) {
+    $flash = ['type' => 'warning', 'msg' => 'This inspection is invoiced and cannot be edited.'];
 } elseif (isset($_GET['err'])) {
     $err_msg = match($_GET['err'] ?? '') {
         'sendfail' => 'Email send failed — check the Emails tab for details.',
@@ -233,6 +235,10 @@ if (isset($_GET['saved'])) {
 // ── Status badge colour ───────────────────────────────────────────────────
 
 $status_colour = inspection_status_colour($ins['status'] ?? '');
+
+// ── Edit lock — Invoiced inspections are read-only ────────────────────────
+
+$is_locked = ($ins['status'] === 'Invoiced');
 
 // ── Helper: field value shorthand ────────────────────────────────────────
 
@@ -387,6 +393,7 @@ require_once __DIR__ . '/includes/header.php';
 </ul>
 
 <div class="tab-content fia-card border-top-0" style="border-radius:0 0 4px 4px;">
+<?php if ($is_locked): ?><fieldset disabled style="border:0;padding:0;margin:0;"><?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      TAB 1 — DISPATCH
@@ -1696,6 +1703,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 </div>
 
+<?php if ($is_locked): ?></fieldset><?php endif; ?>
 </div><!-- /.tab-content -->
 
 <!-- ══════════════════════════════════════════════════════════════════════

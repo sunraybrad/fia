@@ -93,6 +93,21 @@ if ($tab === 'detail') {
         exit;
     }
 
+    // Enforce unique email
+    if (!empty($fields['email'])) {
+        $eq = $db->prepare(
+            "SELECT inspector_id FROM inspectors WHERE email = ? AND inspector_id != ? LIMIT 1"
+        );
+        $eq->bind_param('si', $fields['email'], $inspector_id);
+        $eq->execute();
+        $dup = $eq->get_result()->fetch_assoc();
+        $eq->close();
+        if ($dup) {
+            header('Location: /office/inspector.php' . ($is_new ? '?new=1' : "?id={$inspector_id}&tab=detail") . '&err=email');
+            exit;
+        }
+    }
+
     // Validate status
     $valid_statuses = ['Active', 'Inactive', 'Prospective', 'NO'];
     if (!in_array($fields['status'], $valid_statuses, true)) {

@@ -28,6 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$submitted = $_POST['csrf_token'] ?? '';
+$stored    = $_SESSION['csrf_token'] ?? '';
+if (empty($submitted) || !hash_equals($stored, $submitted)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'Invalid CSRF token']);
+    exit;
+}
+
 $message_id  = (int)($_POST['message_id'] ?? 0);
 $inspector_id = (int)$_SESSION['inspector_id'];
 

@@ -71,15 +71,15 @@ if (!$pics_stmt->execute()) {
 }
 $pics_stmt->close();
 
-// ── Complete lock ─────────────────────────────────────────────────────────
+// ── Edit lock — only 'Assigned' inspections are editable ─────────────────
 
-$is_complete = ($ins['status'] === 'Complete');
+$is_locked = ($ins['status'] !== 'Assigned');
 
 // ── Flash ─────────────────────────────────────────────────────────────────
 
 $flash = null;
-if ($is_complete && !isset($_GET['complete'])) {
-    $flash = ['type' => 'info', 'msg' => 'This inspection is marked Complete and is read-only. Contact the office if changes are needed.'];
+if ($is_locked && !isset($_GET['complete'], $_GET['saved'], $_GET['uploaded'], $_GET['locked'], $_GET['err'])) {
+    $flash = ['type' => 'info', 'msg' => 'This inspection is ' . h($ins['status']) . ' and is read-only.'];
 }
 if (isset($_GET['saved']))     $flash = ['type' => 'success', 'msg' => 'Report saved.'];
 elseif (isset($_GET['uploaded'])) {
@@ -87,7 +87,7 @@ elseif (isset($_GET['uploaded'])) {
     $flash = ['type' => 'success', 'msg' => $n . ' photo' . ($n !== 1 ? 's' : '') . ' uploaded.'];
 }
 elseif (isset($_GET['complete'])) $flash = ['type' => 'success', 'msg' => 'Inspection marked Complete.'];
-elseif (isset($_GET['locked']))   $flash = ['type' => 'warning', 'msg' => 'This inspection is Complete. No changes were saved. Contact the office to re-open it.'];
+elseif (isset($_GET['locked']))   $flash = ['type' => 'warning', 'msg' => 'This inspection is locked for editing. No changes were saved.'];
 elseif (isset($_GET['err']))      $flash = ['type' => 'danger',  'msg' => 'An error occurred. Please try again.'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ require_once __DIR__ . '/includes/header.php';
         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
         <input type="hidden" name="fia"        value="<?= $fia ?>">
         <input type="hidden" name="action"     value="findings">
-        <?php if ($is_complete): ?><fieldset disabled><?php endif; ?>
+        <?php if ($is_locked): ?><fieldset disabled><?php endif; ?>
 
         <div class="row g-3">
 
@@ -363,7 +363,7 @@ require_once __DIR__ . '/includes/header.php';
                     <tr>
                         <td style="font-size:.8rem; text-align: right;"><?= $label ?></td>
                         <td>
-                            <select name="<?= $ck ?>" class="form-select form-select-sm" <?= $is_complete ? 'disabled' : '' ?>>
+                            <select name="<?= $ck ?>" class="form-select form-select-sm" <?= $is_locked ? 'disabled' : '' ?>>
                                 <?php foreach ($fluid_conditions as $opt): ?>
                                 <option value="<?= h($opt) ?>" <?= $cval === $opt ? 'selected' : '' ?>>
                                     <?= $opt === '' ? '— select —' : h($opt) ?>
@@ -372,7 +372,7 @@ require_once __DIR__ . '/includes/header.php';
                             </select>
                         </td>
                         <td>
-                            <select name="<?= $lk ?>" class="form-select form-select-sm" <?= $is_complete ? 'disabled' : '' ?>>
+                            <select name="<?= $lk ?>" class="form-select form-select-sm" <?= $is_locked ? 'disabled' : '' ?>>
                                 <?php foreach ($fluid_levels as $opt): ?>
                                 <option value="<?= h($opt) ?>" <?= $lval === $opt ? 'selected' : '' ?>>
                                     <?= $opt === '' ? '— select —' : h($opt) ?>
@@ -476,9 +476,9 @@ require_once __DIR__ . '/includes/header.php';
 
         </div><!-- /.row -->
 
-        <?php if ($is_complete): ?></fieldset><?php endif; ?>
+        <?php if ($is_locked): ?></fieldset><?php endif; ?>
 
-        <?php if (!$is_complete): ?>
+        <?php if (!$is_locked): ?>
         <div class="mt-3 d-flex gap-2 flex-wrap">
             <button type="submit" class="btn btn-fia">
                 <i class="bi bi-check-circle"></i> Save Report
@@ -505,7 +505,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="insp-card-body">
 
         <!-- Upload zone (hidden when Complete) -->
-        <?php if (!$is_complete): ?>
+        <?php if (!$is_locked): ?>
         <form method="POST" action="/inspector/upload.php"
               enctype="multipart/form-data" id="upload-form">
             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
@@ -561,13 +561,13 @@ require_once __DIR__ . '/includes/header.php';
                            name="caption[<?= (int)$pic['picture_id'] ?>]"
                            value="<?= h($pic['caption'] ?? '') ?>"
                            placeholder="Add caption…"
-                           <?= $is_complete ? 'disabled' : '' ?>>
+                           <?= $is_locked ? 'disabled' : '' ?>>
                 </div>
                 <div style="font-size:.7rem; color:#888; padding:0 0.4rem 0.3rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
                      title="<?= h($pic['image_path']) ?>">
                     <?= h($pic['image_path']) ?>
                 </div>
-                <?php if (!$is_complete): ?>
+                <?php if (!$is_locked): ?>
                 <div class="photo-actions">
                     <button type="button"
                             class="btn btn-outline-danger btn-sm py-0 px-1 btn-delete-photo"
@@ -581,7 +581,7 @@ require_once __DIR__ . '/includes/header.php';
             <?php endforeach; ?>
             </div>
 
-            <?php if (!$is_complete): ?>
+            <?php if (!$is_locked): ?>
             <div class="mt-3">
                 <button type="submit" class="btn btn-fia btn-sm">
                     <i class="bi bi-check-circle"></i> Save Captions

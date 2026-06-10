@@ -40,7 +40,7 @@ if (!$own_row) {
     header('Location: /inspector/jobs.php');
     exit;
 }
-if ($own_row['status'] === 'Complete') {
+if (!in_array($own_row['status'], ['Unassigned', 'Assigned'], true)) {
     header("Location: /inspector/job.php?fia={$fia}&locked=1");
     exit;
 }

@@ -427,11 +427,13 @@ function toggleMsg(id) {
     chev.classList.toggle('open', !open);
 }
 
+const CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
+
 function markRead(id) {
     fetch('/inspector/mark_message_read.php', {
         method:  'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body:    'message_id=' + id
+        body:    'message_id=' + id + '&csrf_token=' + encodeURIComponent(CSRF_TOKEN)
     })
     .then(r => r.json())
     .then(data => {

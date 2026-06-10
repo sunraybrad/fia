@@ -57,8 +57,9 @@ if ($already_connected && !$reconnect) {
     $oauth2LoginHelper = $dataService->getOAuth2LoginHelper();
     $authUrl           = $oauth2LoginHelper->getAuthorizationCodeURL();
 
-    // Store CSRF state value that Intuit echoes back in the callback
-    $_SESSION['qbo_oauth_state'] = parse_url($authUrl, PHP_URL_QUERY);
+    // Store the state token that Intuit echoes back in the callback for CSRF validation
+    parse_str(parse_url($authUrl, PHP_URL_QUERY), $auth_params);
+    $_SESSION['qbo_oauth_state'] = $auth_params['state'] ?? '';
 
     // DEBUG — remove after confirming redirect_uri is correct
     // die('<pre>' . htmlspecialchars($authUrl) . '</pre>');

@@ -25,17 +25,23 @@ if (!$fia) {
     exit;
 }
 
-// Verify the inspection exists (office can upload to any active inspection)
+// Verify the inspection exists and is still open for uploads
 $chk = $db->prepare(
-    "SELECT fia_number FROM inspections WHERE fia_number = ? AND is_archived = FALSE LIMIT 1"
+    "SELECT status FROM inspections WHERE fia_number = ? AND is_archived = FALSE LIMIT 1"
 );
 $chk->bind_param('i', $fia);
 $chk->execute();
-if (!$chk->get_result()->fetch_assoc()) {
+$chk_row = $chk->get_result()->fetch_assoc();
+$chk->close();
+
+if (!$chk_row) {
     header('Location: /office/index.php');
     exit;
 }
-$chk->close();
+if (!in_array($chk_row['status'], ['Unassigned', 'Assigned'], true)) {
+    header("Location: /office/inspection.php?fia={$fia}&tab=photos&locked=1");
+    exit;
+}
 
 $redirect_base = "/office/inspection.php?fia={$fia}&tab=photos";
 $upload_source = 'office';

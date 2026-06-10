@@ -76,6 +76,24 @@ function update_inspections(mysqli $db, int $fia, array $fields): bool {
     return $ok;
 }
 
+// ── Status lock — Invoiced inspections are read-only ─────────────────────
+
+$ls = $db->prepare("SELECT status FROM inspections WHERE fia_number = ? LIMIT 1");
+$ls->bind_param('i', $fia);
+$ls->execute();
+$inspection_status = $ls->get_result()->fetch_assoc()['status'] ?? '';
+$ls->close();
+
+if ($inspection_status === 'Invoiced') {
+    if ($tab === 'assign_inspector') {
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => false, 'error' => 'This inspection is invoiced and cannot be edited.']);
+        exit;
+    }
+    header("Location: /office/inspection.php?fia={$fia}&tab=" . urlencode($tab) . "&locked=1");
+    exit;
+}
+
 // ═════════════════════════════════════════════════════════════════════════
 // ROUTE BY TAB
 // ═════════════════════════════════════════════════════════════════════════

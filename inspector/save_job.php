@@ -43,8 +43,8 @@ if (!$row) {
 
 $current_status = $row['status'];
 
-// Complete inspections are read-only for inspectors
-if ($current_status === 'Complete') {
+// Inspectors can only edit when the inspection is 'Assigned'
+if ($current_status !== 'Assigned') {
     header("Location: /inspector/job.php?fia={$fia}&locked=1");
     exit;
 }

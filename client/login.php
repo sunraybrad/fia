@@ -21,6 +21,8 @@ $reason_messages = [
     'session_expired' => 'Your session expired. Please log in again.',
     'not_logged_in'   => 'Please log in to access this portal.',
     'logged_out'      => 'You have been logged out.',
+    'account_inactive'=> 'Your account is no longer active. Please contact FIA.',
+    'session_mismatch'=> 'Your session was invalid. Please log in again.',
 ];
 $info = $reason_messages[$reason] ?? '';
 

@@ -26,6 +26,14 @@ if (empty($_GET['code']) || empty($_GET['realmId'])) {
     _fail('Missing authorization code or realmId.');
 }
 
+// Validate CSRF state before exchanging the code
+$returned_state = $_GET['state'] ?? '';
+$expected_state = $_SESSION['qbo_oauth_state'] ?? '';
+if (empty($returned_state) || !hash_equals($expected_state, $returned_state)) {
+    _fail('OAuth state mismatch — possible CSRF. Please try connecting again.');
+}
+unset($_SESSION['qbo_oauth_state']);
+
 $auth_code = $_GET['code'];
 $realm_id  = $_GET['realmId'];
 
@@ -62,9 +70,9 @@ if (!$accessToken || !$accessToken->getAccessToken()) {
 $db  = get_db();
 $env = QBO_BASE_URL === 'development' ? 'sandbox' : 'production';
 
-// Intuit returns expiry in seconds from now
-$access_expires  = date('Y-m-d H:i:s', time() + (int)$accessToken->getAccessTokenExpiresAt());
-$refresh_expires = date('Y-m-d H:i:s', time() + (int)$accessToken->getRefreshTokenExpiresAt());
+// getAccessTokenExpiresAt() returns an absolute date string ('Y/m/d H:i:s') — reformat for MySQL
+$access_expires  = date('Y-m-d H:i:s', strtotime($accessToken->getAccessTokenExpiresAt()));
+$refresh_expires = date('Y-m-d H:i:s', strtotime($accessToken->getRefreshTokenExpiresAt()));
 
 $stmt = $db->prepare('
     INSERT INTO qbo_tokens

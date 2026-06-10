@@ -9,11 +9,11 @@
 
 require_once 'C:\inetpub\fia_private\config.php';
 require_once 'C:\inetpub\fia_private\db.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/PHPMailer6/autoload.php';
+require_once __DIR__ . '/../PHPMailer6/autoload.php';
 init_session();
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\Exception as MailerException;
 
 $submitted = false;
 $error     = '';
@@ -24,13 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (is_rate_limited('pwd_reset', 5, 900)) {
         $error = 'Too many reset requests. Please wait 15 minutes and try again.';
     } else {
-    record_attempt('pwd_reset', 5, 900);
+        $email = trim($_POST['email'] ?? '');
 
-    $email = trim($_POST['email'] ?? '');
-
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
-    } else {
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Please enter a valid email address.';
+        } else {
+        record_attempt('pwd_reset', 5, 900);
         $db   = get_db();
         $stmt = $db->prepare(
             "SELECT id FROM office_users WHERE email = ? AND is_active = 1 LIMIT 1"
@@ -67,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 log_audit('password_reset.request');
 
                 // Send the reset email
-                $reset_url = 'https://fiainspectors.com/office/reset_password.php?token=' . $raw_token;
+                $reset_url = SITE_URL . '/office/reset_password.php?token=' . $raw_token;
 
                 try {
                     $mail = new PHPMailer(true);
@@ -95,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    . "If you did not request this, ignore this email.";
 
                     $mail->send();
-                } catch (Exception $e) {
+                } catch (MailerException $e) {
                     error_log('Password reset mail failed: ' . $mail->ErrorInfo);
                     // We don't expose mail failures to the user
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 error_log('Password reset token generation failed: ' . $e->getMessage());
                 $error = 'A server error occurred. Please try again later.';
             }

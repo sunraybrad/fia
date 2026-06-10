@@ -1,10 +1,8 @@
 <?php
 /**
  * login.php — Inspector portal login
- * Authenticates against inspectors table using inspector_id + legacy_pin.
+ * Authenticates against inspectors table using email + legacy_pin.
  */
-
-use PHPMailer\PHPMailer\PHPMailer;
 
 require_once 'C:\inetpub\fia_private\config.php';
 require_once 'C:\inetpub\fia_private\db.php';
@@ -21,9 +19,11 @@ $error  = '';
 $reason = $_GET['reason'] ?? '';
 
 $reason_messages = [
-    'not_logged_in'  => 'Please log in to continue.',
-    'session_expired'=> 'Your session has expired. Please log in again.',
-    'logged_out'     => 'You have been logged out.',
+    'not_logged_in'   => 'Please log in to continue.',
+    'session_expired' => 'Your session has expired. Please log in again.',
+    'logged_out'      => 'You have been logged out.',
+    'account_inactive'=> 'Your account is no longer active. Please contact FIA.',
+    'session_mismatch'=> 'Your session was invalid. Please log in again.',
 ];
 
 if ($reason && isset($reason_messages[$reason])) {
@@ -31,42 +31,33 @@ if ($reason && isset($reason_messages[$reason])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $inspector_id = (int)trim($_POST['inspector_id'] ?? '');
-    $pin          = trim($_POST['pin'] ?? '');
+    $email = strtolower(trim($_POST['email'] ?? ''));
+    $pin   = trim($_POST['pin'] ?? '');
 
-    if (!$inspector_id || $pin === '') {
-        $error = 'Please enter your Inspector ID and PIN.';
+    if ($email === '' || $pin === '') {
+        $error = 'Please enter your email address and PIN.';
     } elseif (is_rate_limited('inspector_login')) {
         $error = 'Too many failed login attempts. Please try again in 30 minutes.';
     } else {
         $db   = get_db();
         $stmt = $db->prepare(
-            "SELECT inspector_id, full_name, email, status, is_archived
+            "SELECT inspector_id, full_name, email, legacy_pin, status
                FROM inspectors
-              WHERE inspector_id = ?
-                AND is_archived  = FALSE
+              WHERE email       = ?
+                AND is_archived = FALSE
               LIMIT 1"
         );
-        $stmt->bind_param('i', $inspector_id);
+        $stmt->bind_param('s', $email);
         $stmt->execute();
         $insp = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
         if (!$insp) {
-            $error = 'Inspector ID not found or account is inactive.';
+            $error = 'Email address not found or account is inactive.';
         } elseif (!in_array($insp['status'], ['Active', 'Prospective'], true)) {
             $error = 'Your account is not active. Please contact FIA.';
-        } elseif ($pin !== (string)$insp['inspector_id'] && $pin !== '') {
-            // Compare against legacy_pin — fetch it separately to avoid exposing in the object above
-            $p_stmt = $db->prepare("SELECT legacy_pin FROM inspectors WHERE inspector_id = ? LIMIT 1");
-            $p_stmt->bind_param('i', $inspector_id);
-            $p_stmt->execute();
-            $legacy_pin = $p_stmt->get_result()->fetch_assoc()['legacy_pin'] ?? '';
-            $p_stmt->close();
-
-            if ($pin !== (string)$legacy_pin) {
-                $error = 'Incorrect PIN. Please try again.';
-            }
+        } elseif ($pin !== (string)($insp['legacy_pin'] ?? '')) {
+            $error = 'Incorrect PIN. Please try again.';
         }
 
         if ($error) {
@@ -108,14 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST" action="/inspector/login.php">
             <div class="mb-3">
-                <label class="form-label fw-semibold">Inspector ID</label>
-                <input type="number" name="inspector_id" class="form-control"
-                       value="<?= h($_POST['inspector_id'] ?? '') ?>"
-                       autofocus required>
+                <label class="form-label fw-semibold">Email Address</label>
+                <input type="email" name="email" class="form-control"
+                       value="<?= h($_POST['email'] ?? '') ?>"
+                       autofocus required autocomplete="username">
             </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold">PIN</label>
-                <input type="password" name="pin" class="form-control" required>
+                <input type="password" name="pin" class="form-control" required autocomplete="current-password">
                 <div class="form-text">Your PIN was provided by FIA. If you don't know it, contact the office.</div>
             </div>
             <button type="submit" class="btn btn-fia w-100">Log In</button>

@@ -146,6 +146,8 @@ if (isset($_GET['saved'])) {
     $flash = ['type' => 'success', 'msg' => 'Inspector saved successfully.'];
 } elseif (isset($_GET['created'])) {
     $flash = ['type' => 'success', 'msg' => 'New inspector created.'];
+} elseif (($_GET['err'] ?? '') === 'email') {
+    $flash = ['type' => 'danger', 'msg' => 'That email address is already used by another inspector.'];
 } elseif (isset($_GET['err'])) {
     $flash = ['type' => 'danger', 'msg' => 'Save failed — please try again.'];
 }

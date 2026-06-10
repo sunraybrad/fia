@@ -85,8 +85,9 @@ function _refresh_qbo_token(DataService $dataService, string $realm_id, mysqli $
         return $dataService;    // return stale service; caller will hit an API error and can redirect
     }
 
-    $access_expires  = date('Y-m-d H:i:s', time() + (int)$newToken->getAccessTokenExpiresAt());
-    $refresh_expires = date('Y-m-d H:i:s', time() + (int)$newToken->getRefreshTokenExpiresAt());
+    // getAccessTokenExpiresAt() returns an absolute date string ('Y/m/d H:i:s') — reformat for MySQL
+    $access_expires  = date('Y-m-d H:i:s', strtotime($newToken->getAccessTokenExpiresAt()));
+    $refresh_expires = date('Y-m-d H:i:s', strtotime($newToken->getRefreshTokenExpiresAt()));
     $at = $newToken->getAccessToken();
     $rt = $newToken->getRefreshToken();
 
