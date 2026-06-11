@@ -1177,18 +1177,23 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Billing Report (PDF) actions -->
     <div class="d-flex align-items-center gap-2 mb-3 p-2 border rounded bg-light">
         <strong class="me-2" style="font-size:.85rem;">Billing Report:</strong>
-        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>" target="_blank"
+        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&preview_only=1" target="_blank"
            class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-eye"></i> Preview
         </a>
-        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&save=1"
+        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&save=1&send=1"
            class="btn btn-fia btn-sm">
-            <i class="bi bi-archive"></i> Generate &amp; Archive
+            <i class="bi bi-envelope-paper"></i> Generate &amp; Send
         </a>
-        <button type="button" class="btn btn-outline-secondary btn-sm"
-                onclick="window.location.href='/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=billing'">
-            <i class="bi bi-envelope-paper"></i> Email to Warranty Co
-        </button>
+        <?php
+        $archived_report = PRIVATE_PATH . '/billing_reports/FIA_Report_' . $fia . '.pdf';
+        if (is_file($archived_report)):
+        ?>
+        <a href="/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=billing"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-repeat"></i> Re-send
+        </a>
+        <?php endif; ?>
         <?php if (!empty($_GET['report_saved'])): ?>
         <span class="text-success ms-2" style="font-size:.82rem;">
             <i class="bi bi-check-circle"></i> Report archived as FIA_Report_<?= $fia ?>.pdf
@@ -1273,10 +1278,7 @@ require_once __DIR__ . '/includes/header.php';
                     <label class="form-label fw-semibold">Invoice No</label>
                     <input type="text" name="invoice_no" class="form-control form-control-sm" value="<?= val($ins,'invoice_no') ?>">
                 </div>
-                <div class="col-6">
-                    <label class="form-label fw-semibold">FIA Invoice No</label>
-                    <input type="text" name="fia_invoice_number" class="form-control form-control-sm" value="<?= val($ins,'fia_invoice_number') ?>">
-                </div>
+
                 <div class="col-6">
                     <label class="form-label fw-semibold">QB Invoice No</label>
                     <input type="text" name="inv_qb_no" class="form-control form-control-sm" value="<?= val($ins,'inv_qb_no') ?>">

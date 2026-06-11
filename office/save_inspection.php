@@ -400,7 +400,7 @@ switch ($tab) {
             'fia_pix'               => post_int('fia_pix'),
             'total_pix'             => post_int('total_pix'),
             'invoice_no'            => post_str('invoice_no'),
-            'fia_invoice_number'    => post_str('fia_invoice_number'),
+
             'inv_qb_no'             => post_str('inv_qb_no'),
             'qb_chnum'              => post_str('qb_chnum'),
             'fia_check_number'      => post_str('fia_check_number'),
