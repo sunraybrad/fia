@@ -231,6 +231,19 @@ if (isset($_GET['saved'])) {
     };
     $flash = ['type' => 'danger', 'msg' => $err_msg];
 }
+// Regeneration refused — the inspection is already Invoiced in QBO.
+if (isset($_GET['already_invoiced'])) {
+    $flash = ['type' => 'warning', 'msg' =>
+        'This inspection is already invoiced in QuickBooks — regenerating would create a duplicate invoice. Use Re-send to email the archived PDF.'];
+}
+// Vendor bill failure after a successful invoice (generate_billing_report.php).
+// The detailed reason travels in the session flash; the query param survives
+// even if the session flash was consumed elsewhere.
+if (isset($_GET['bill_warn'])) {
+    $bill_flash = get_flash();
+    $flash = ['type' => 'warning', 'msg' => $bill_flash['message']
+        ?? 'Invoice created, but the QBO vendor bill failed — check the error log, then regenerate or enter the bill in QBO manually.'];
+}
 
 // ── Status badge colour ───────────────────────────────────────────────────
 
@@ -1177,6 +1190,13 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Billing Report (PDF) actions -->
     <div class="d-flex align-items-center gap-2 mb-3 p-2 border rounded bg-light">
         <strong class="me-2" style="font-size:.85rem;">Billing Report:</strong>
+        <?php
+        $archived_report = PRIVATE_PATH . '/billing_reports/FIA_Report_' . $fia . '.pdf';
+        $has_archived    = is_file($archived_report);
+        // Once Invoiced, regeneration is blocked (it would duplicate the QBO
+        // invoice — guard also enforced in generate_billing_report.php).
+        if (!$is_locked):
+        ?>
         <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&preview_only=1" target="_blank"
            class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-eye"></i> Preview
@@ -1185,14 +1205,21 @@ require_once __DIR__ . '/includes/header.php';
            class="btn btn-fia btn-sm">
             <i class="bi bi-envelope-paper"></i> Generate &amp; Send
         </a>
-        <?php
-        $archived_report = PRIVATE_PATH . '/billing_reports/FIA_Report_' . $fia . '.pdf';
-        if (is_file($archived_report)):
-        ?>
-        <a href="/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=billing"
+        <?php endif; ?>
+        <?php if ($has_archived): ?>
+        <a href="/office/generate_billing_report.php?fia=<?= $fia ?>&archived=1" target="_blank"
            class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i> View Archived
+        </a>
+        <a href="/office/inspection.php?fia=<?= $fia ?>&tab=emails&compose=billing"
+           class="btn <?= $is_locked ? 'btn-fia' : 'btn-outline-secondary' ?> btn-sm">
             <i class="bi bi-arrow-repeat"></i> Re-send
         </a>
+        <?php endif; ?>
+        <?php if ($is_locked && !$has_archived): ?>
+        <span class="text-muted ms-1" style="font-size:.82rem;">
+            Invoiced (QB #<?= h($ins['inv_qb_no'] ?? '') ?>) — no archived PDF found.
+        </span>
         <?php endif; ?>
         <?php if (!empty($_GET['report_saved'])): ?>
         <span class="text-success ms-2" style="font-size:.82rem;">

@@ -5,13 +5,16 @@
  * Hub for the FIA Invoice PDF — the cover page (or standalone invoice) sent
  * to warranty companies. Mirrors the pattern of includes/billing_pdf.php.
  *
- * Two use cases share this hub:
+ * Billing is per-inspection for ALL clients (batch invoicing was cancelled
+ * 2026-06-11). One line item per invoice:
  *
- *   CNA (warranty_co_id = 1074) — individual inspection invoice, prepended to
- *   the Billing Report before emailing. One line item.
+ *   CNA (warranty_co_id = 1074) — invoice page prepended to the Billing
+ *   Report + photos before emailing.
  *
- *   All others — batch invoice covering multiple inspections for one warranty
- *   company. Multiple line items (up to 42 per page).
+ *   All others — the invoice PDF IS the deliverable (no report, no photos).
+ *
+ * invoice_data_for_batch() below predates the cancellation and currently has
+ * no callers — kept in case batch invoicing ever returns.
  *
  * In both cases the caller is responsible for:
  *   1. Creating the QBO Invoice and retrieving the invoice metadata.
@@ -170,9 +173,10 @@ function invoice_data_for_inspection(int $fia, array $qbo_meta, mysqli $db): arr
             i.contract_number,
             i.insured,
             i.inspection_fee,
-            i.base_fee,
+            i.fia_base_fee,
+            i.fia_pix,
+            i.fia_special_charges,
             i.fuel_surcharge,
-            i.special_charges,
             w.company_name,
             w.address,
             w.city,
@@ -256,9 +260,10 @@ function invoice_data_for_batch(int $warranty_co_id, array $fia_numbers, array $
             contract_number,
             insured,
             inspection_fee,
-            base_fee,
-            fuel_surcharge,
-            special_charges
+            fia_base_fee,
+            fia_pix,
+            fia_special_charges,
+            fuel_surcharge
         FROM inspections
         WHERE fia_number IN ({$placeholders})
         ORDER BY date_of_inspection, fia_number
@@ -311,14 +316,17 @@ function invoice_data_for_batch(int $warranty_co_id, array $fia_numbers, array $
 
 /**
  * Return the effective inspection fee for one row.
- * Uses inspection_fee if set; otherwise sums base_fee + fuel_surcharge + special_charges.
+ * Uses inspection_fee if set; otherwise the FileMaker InspectionFee formula:
+ *   FIA Base Fee + FIA Pix + FIA Special Charges + FuelSurcharge
+ * (FIA/client-side fields — NOT the inspector-side base_fee/special_charges).
  */
 function _invoice_compute_fee(array $row): float
 {
     if (!empty($row['inspection_fee']) && (float)$row['inspection_fee'] > 0) {
         return (float)$row['inspection_fee'];
     }
-    return (float)($row['base_fee']       ?? 0)
-         + (float)($row['fuel_surcharge'] ?? 0)
-         + (float)($row['special_charges'] ?? 0);
+    return (float)($row['fia_base_fee']        ?? 0)
+         + (float)($row['fia_pix']             ?? 0)
+         + (float)($row['fia_special_charges'] ?? 0)
+         + (float)($row['fuel_surcharge']      ?? 0);
 }
