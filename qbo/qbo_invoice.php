@@ -45,6 +45,7 @@
 require_once __DIR__ . '/qbo_service.php';
 require_once __DIR__ . '/qbo_sync.php';
 
+use QuickBooksOnline\API\DataService\DataService;
 use QuickBooksOnline\API\Data\IPPInvoice;
 use QuickBooksOnline\API\Data\IPPLine;
 use QuickBooksOnline\API\Data\IPPSalesItemLineDetail;
@@ -174,7 +175,7 @@ function qbo_create_invoice(int $warranty_co_id, array $line_items, string $inv_
     $error  = $qbo->getLastError();
 
     if ($error) {
-        $msg = $error->getResponseBody() ?? $error->getMessage();
+        $msg = $error->getResponseBody() ?: $error->getIntuitErrorMessage();
         error_log("QBO invoice creation failed (warranty_co {$warranty_co_id}): " . $msg);
         return ['success' => false, 'error' => $msg];
     }
@@ -228,7 +229,7 @@ function qbo_get_item_id($qbo, string $item_name): string|false
     $error  = $qbo->getLastError();
 
     if ($error) {
-        error_log("qbo_get_item_id query failed for \"{$item_name}\": " . ($error->getResponseBody() ?? $error->getMessage()));
+        error_log("qbo_get_item_id query failed for \"{$item_name}\": " . ($error->getResponseBody() ?: $error->getIntuitErrorMessage()));
         return false;
     }
 
