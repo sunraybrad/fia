@@ -358,7 +358,6 @@ $warco_name = $_SESSION['warco_name'] ?? '';
             'Commercial Use'      => ro($ins, 'commercial_use'),
             'Impact Damage'       => ro($ins, 'impact_damage'),
             'Service History'     => ro($ins, 'service_history_avail'),
-            'Towing'              => ro($ins, 'towing'),
             'Modifications'       => ro($ins, 'modifications'),
             'Engine Size'         => ro($ins, 'engine_size'),
             'Transmission'        => ro($ins, 'transmission_type'),

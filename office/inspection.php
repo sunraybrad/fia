@@ -934,10 +934,6 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-6">
-                    <label class="form-label fw-semibold">Towing</label>
-                    <input type="number" step="0.01" name="towing" class="form-control form-control-sm" value="<?= val($ins,'towing') ?>">
-                </div>
             </div>
         </div>
 
@@ -1187,9 +1183,9 @@ require_once __DIR__ . '/includes/header.php';
 <input type="hidden" name="tab"        value="billing">
 <div class="fia-card-body fia-form-section">
 
-    <!-- Billing Report (PDF) actions -->
+    <!-- Invoicing (PDF) actions -->
     <div class="d-flex align-items-center gap-2 mb-3 p-2 border rounded bg-light">
-        <strong class="me-2" style="font-size:.85rem;">Billing Report:</strong>
+        <strong class="me-2" style="font-size:.85rem;">Invoicing & Billing:</strong>
         <?php
         $archived_report = PRIVATE_PATH . '/billing_reports/FIA_Report_' . $fia . '.pdf';
         $has_archived    = is_file($archived_report);
@@ -1551,11 +1547,11 @@ require_once __DIR__ . '/includes/header.php';
 
 <!-- Compose section -->
 <div class="fia-card-body border-bottom">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong style="font-size:.85rem;">Compose Email</strong>
+    <div class="d-flex align-items-center mb-2">
         <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-toggle-compose">
             <i class="bi bi-chevron-down" id="compose-chevron"></i>
         </button>
+        <strong style="font-size:.85rem; margin-left: .5rem;">Compose Email</strong>
     </div>
     <div id="compose-form-wrap" style="display:none;">
     <form method="POST" action="/office/send_inspection_email.php" id="compose-form" enctype="multipart/form-data">
@@ -1574,7 +1570,7 @@ require_once __DIR__ . '/includes/header.php';
                     <option value="assignment">Assignment to Inspector</option>
                     <option value="reminder">Reminder to Inspector</option>
                     <option value="warco_notify">Notification to Warranty Co</option>
-                    <option value="billing">Billing Report to Warranty Co</option>
+                    <option value="billing">Invoice to Warranty Co</option>
                     <option value="manual">Manual / Custom</option>
                 </select>
             </div>
@@ -2077,8 +2073,8 @@ require_once __DIR__ . '/includes/header.php';
         },
         billing: {
             recipient: 'warco',
-            subject:   `FIA Billing Report — ${TPL.fia} / Claim ${TPL.claim}`,
-            body: `Dear ${TPL.warco_supervisor || TPL.warco_name},\n\nPlease find attached the completed Billing Report for the following inspection:\n\nFIA #: ${TPL.fia}\nClaim #: ${TPL.claim}\nContract #: ${TPL.contract}\nVehicle: ${TPL.vehicle}\nShop: ${TPL.shop}\n\nLet us know if you have any questions.\n\nFlorida Inspection Associates`,
+            subject:   `FIA Invoice — ${TPL.fia} / Claim ${TPL.claim}`,
+            body: `Dear ${TPL.warco_supervisor || TPL.warco_name},\n\nPlease find attached the completed Invoice for the following inspection:\n\nFIA #: ${TPL.fia}\nClaim #: ${TPL.claim}\nContract #: ${TPL.contract}\nVehicle: ${TPL.vehicle}\nShop: ${TPL.shop}\n\nLet us know if you have any questions.\n\nFlorida Inspection Associates`,
             attachment: `FIA_Report_${TPL.fia}.pdf`,
         },
         manual: {

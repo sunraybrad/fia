@@ -31,10 +31,21 @@ if ($reason && isset($reason_messages[$reason])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Soft CSRF check (same pattern as the office/client logins). A stale or
+    // missing token here almost always means the session expired while the
+    // login page sat open — not an attack. Recover in-place with a fresh token
+    // instead of a hard 403, so the user just submits once more.
+    $submitted_csrf = $_POST['csrf_token'] ?? '';
+    $stored_csrf    = $_SESSION['csrf_token'] ?? '';
+
     $email = strtolower(trim($_POST['email'] ?? ''));
     $pin   = trim($_POST['pin'] ?? '');
 
-    if ($email === '' || $pin === '') {
+    if ($submitted_csrf === '' || !hash_equals($stored_csrf, $submitted_csrf)) {
+        unset($_SESSION['csrf_token']);   // csrf_token() reissues on re-render
+        $error = 'Your session timed out. Please log in again.';
+    } elseif ($email === '' || $pin === '') {
         $error = 'Please enter your email address and PIN.';
     } elseif (is_rate_limited('inspector_login')) {
         $error = 'Too many failed login attempts. Please try again in 30 minutes.';
@@ -98,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="/inspector/login.php">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
             <div class="mb-3">
                 <label class="form-label fw-semibold">Email Address</label>
                 <input type="email" name="email" class="form-control"

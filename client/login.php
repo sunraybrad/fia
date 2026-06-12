@@ -28,9 +28,21 @@ $info = $reason_messages[$reason] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    verify_csrf();
+    // Soft CSRF check. A stale/missing token here almost always means the
+    // session expired while the login page sat open — not an attack. Recover
+    // in-place by re-issuing a fresh token and re-rendering the form, instead
+    // of verify_csrf()'s hard 403 die() that dead-ends the user on a plain-text
+    // error page. (verify_csrf() is for authenticated POST handlers, where a
+    // 403 is the correct response; login is the one place the session may
+    // legitimately not exist yet.)
+    $submitted_csrf = $_POST['csrf_token'] ?? '';
+    $stored_csrf    = $_SESSION['csrf_token'] ?? '';
 
-    if (is_rate_limited('warco_login', 5, 900)) {
+    if ($submitted_csrf === '' || !hash_equals($stored_csrf, $submitted_csrf)) {
+        unset($_SESSION['csrf_token']);   // csrf_token() reissues on re-render
+        $error = 'Your session timed out. Please log in again.';
+
+    } elseif (is_rate_limited('warco_login', 5, 900)) {
         $error = 'Too many failed attempts. Please try again in 15 minutes.';
     } else {
 

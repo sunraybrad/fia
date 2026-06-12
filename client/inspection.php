@@ -291,7 +291,6 @@ foreach ($tabs as $slug => $label):
                 <tr><td class="text-muted">Commercial Use</td><td><?= ro($ins,'commercial_use') ?></td></tr>
                 <tr><td class="text-muted">Impact Damage</td><td><?= ro($ins,'impact_damage') ?></td></tr>
                 <tr><td class="text-muted">Service History</td><td><?= ro($ins,'service_history_avail') ?></td></tr>
-                <tr><td class="text-muted">Towing</td><td><?= ro($ins,'towing') ?></td></tr>
                 <tr><td class="text-muted">Modifications</td><td><?= ro($ins,'modifications') ?></td></tr>
                 </tbody>
             </table>

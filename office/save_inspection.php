@@ -297,7 +297,6 @@ switch ($tab) {
             'commercial_use'         => post_str('commercial_use'),
             'impact_damage'          => post_str('impact_damage'),
             'service_history_avail'  => post_str('service_history_avail'),
-            'towing'                 => post_dec('towing'),
             'modifications'          => post_str('modifications'),
             'customer_complaint'     => post_str('customer_complaint'),
             'overall_condition'      => post_str('overall_condition'),
